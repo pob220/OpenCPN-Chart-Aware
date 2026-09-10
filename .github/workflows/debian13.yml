@@ -36,6 +36,10 @@ jobs:
             '
       - name: Qualify on clean Debian 13 without compilers
         run: |
+          # The builder creates this directory as container UID 1000. The host
+          # runner runs tee below, so it must own the directory for the new log.
+          sudo chown "$(id -u):$(id -g)" "$RUNNER_TEMP/chart-aware-work/logs"
+          test -w "$RUNNER_TEMP/chart-aware-work/logs"
           package=$(find "$RUNNER_TEMP/chart-aware-work/packages" -maxdepth 1 -name '*.deb' -print -quit)
           test -n "$package"
           docker run --rm \
