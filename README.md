@@ -3,8 +3,9 @@
 A focused Debian 13 installer for chart/depth-aware Weather Routing, based on
 upstream **OpenCPN 5.14.0**, not the broader Core-Hardening developer bundle.
 
-**Development in progress. Do not assume an installer is qualified until a release
-explicitly records its test results.**
+**Debian 13 amd64 testing preview:** [downloads and verification results](https://github.com/pob220/OpenCPN-Chart-Aware/releases/tag/debian13-preview-20260910).
+Clean-container installation and runtime tests do not replace licensed-chart and
+hardware testing on a real Debian desktop. See the release's qualification limits.
 
 The stack includes Weather Routing 1.17.1, xGRIB 0.2.4.1 (Generator 0.1.7),
 Climatology dataset 2026.2, Polar and the modified o-charts semantic provider.
