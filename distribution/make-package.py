@@ -67,6 +67,24 @@ def main(work):
     for name in required:
         if not (prefix / f"lib/opencpn/lib{name}_pi.so").is_file():
             raise RuntimeError(f"Required plugin missing: {name}")
+    climate = prefix / "share/opencpn/plugins/climatology_pi/data"
+    dataset = json.loads((climate / "dataset-manifest.json").read_text())
+    if dataset["dataset_version"] != "ocpn-climatology-2026.2" or not dataset["outputs"]:
+        raise RuntimeError("Unexpected or empty Climatology dataset manifest")
+    for entry in dataset["outputs"]:
+        datafile = climate / entry["file"]
+        if climate.resolve() not in datafile.resolve().parents:
+            raise RuntimeError("Invalid Climatology manifest path")
+        with datafile.open("rb") as stream:
+            if hashlib.file_digest(stream, "sha256").hexdigest() != entry["sha256"]:
+                raise RuntimeError(f"Climatology data checksum mismatch: {entry['file']}")
+    symbols = subprocess.check_output(["nm", "-D", str(prefix / "lib/opencpn/libo-charts_pi.so")], text=True)
+    if "OCPN_PluginChartSafetyGridV1" not in symbols or "OCPN_PluginChartSafetyIdentityV1" not in symbols:
+        raise RuntimeError("o-charts is missing its semantic provider exports")
+    core_symbols = subprocess.check_output(["nm", "-D", str(prefix / "bin/opencpn")], text=True)
+    for symbol in ("PlugIn_CheckSegmentSafety", "PlugIn_GetSegmentSafetyChartCoverageTiles", "PlugIn_RegisterSegmentSafetyTileCache"):
+        if symbol not in core_symbols:
+            raise RuntimeError(f"Core chart-safety export missing: {symbol}")
     doc = prefix / "share/opencpn-chart-aware"
     doc.mkdir(parents=True, exist_ok=True)
     for name in ("preview.py", "replace.py", "components.json", "INSTALL.md"):

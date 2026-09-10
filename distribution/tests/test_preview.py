@@ -71,6 +71,7 @@ class SetupTest(unittest.TestCase):
             (root / "opencpn.conf").write_text("[Settings]\n")
             with self.assertRaises(RuntimeError):
                 preview.initialize(root / "nested", root)
+            self.assertFalse((root / "nested").exists())
 
     @patch.object(preview, "check_stopped", side_effect=RuntimeError("running"))
     def test_running_application_blocks_import(self, stopped):

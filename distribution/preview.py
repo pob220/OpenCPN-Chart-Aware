@@ -107,6 +107,12 @@ def inventory(source):
 def initialize(root, source=None, renderer="software"):
     check_stopped()
     root = root.resolve()
+    if source:
+        source = source.resolve()
+        if not (source / "opencpn.conf").is_file() or (source / "opencpn.conf").is_symlink():
+            raise RuntimeError("Choose an OpenCPN profile containing a regular opencpn.conf file.")
+        if source == root or source in root.parents or root in source.parents:
+            raise RuntimeError("Source and destination profiles must not overlap.")
     root.mkdir(parents=True, mode=0o700, exist_ok=True)
     os.chmod(root, 0o700)
     profile = root / "profile"
@@ -115,11 +121,6 @@ def initialize(root, source=None, renderer="software"):
     backup = None
     files, skipped = [], []
     if source:
-        source = source.resolve()
-        if not (source / "opencpn.conf").is_file() or (source / "opencpn.conf").is_symlink():
-            raise RuntimeError("Choose an OpenCPN profile containing a regular opencpn.conf file.")
-        if source == root or source in root.parents or root in source.parents:
-            raise RuntimeError("Source and destination profiles must not overlap.")
         files, skipped = inventory(source)
         size = sum((source / p).stat().st_size for p in files)
         if shutil.disk_usage(root).free < 2 * size + 100 * 1024 * 1024:
@@ -252,6 +253,8 @@ def main():
             profile = setup_dialog(root)
             if profile is None:
                 return
+        if not (profile / "preview-setup.json").is_file():
+            raise RuntimeError("An unrecognized preview profile exists; preserving it without changes. See the installation guide.")
         if options.software:
             check_stopped()
             config = profile / "opencpn.conf"
