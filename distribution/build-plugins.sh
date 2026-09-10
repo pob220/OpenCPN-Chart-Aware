@@ -30,6 +30,7 @@ for name in ${PLUGIN_COMPONENTS:-weather_routing xgrib climatology}; do
     > "$work/logs/$name-install.log" 2>&1
   echo "Installed $name; details in $work/logs/$name-install.log"
   if [[ "$name" == xgrib ]]; then
+    python3 /src/distribution/normalize-xgrib-stage.py "$work/plugin-stage"
     bash "$source_dir/scripts/run-functional-merge-test.sh" "$build_dir" "$work/logs/xgrib-functional"
     bash "$source_dir/scripts/test-packaged-helper.sh" "$work/plugin-stage$prefix"
   fi

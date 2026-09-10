@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Clean-container GUI smoke check. Does not assert licensed chart coverage."""
 import configparser
+import argparse
 import importlib.util
 from pathlib import Path
 import subprocess
@@ -15,11 +16,19 @@ spec.loader.exec_module(preview)
 
 
 def main():
-    subprocess.run(["opencpn-chart-aware", "--initialize"], check=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--opengl', action='store_true')
+    parser.add_argument('--software-recovery', action='store_true')
+    args = parser.parse_args()
+    if args.opengl or args.software_recovery:
+        preview.initialize(preview.state_root(), renderer='opengl')
+    else:
+        subprocess.run(["opencpn-chart-aware", "--initialize"], check=True)
     profile = preview.state_root() / "profile"
     conf = profile / "opencpn.conf"
     # Exercise the real launcher and acknowledge only its expected disclaimer.
-    process = subprocess.Popen(["opencpn-chart-aware"], stdout=subprocess.DEVNULL)
+    command = ["opencpn-chart-aware"] + (["--software"] if args.software_recovery else [])
+    process = subprocess.Popen(command, stdout=subprocess.DEVNULL)
     log = profile / "opencpn.log"
     started = False
     try:
@@ -78,14 +87,17 @@ def main():
     cfg.read(conf)
     if cfg.get("PlugIns/libgrib_pi.so", "bEnabled") != "0":
         raise RuntimeError("Native GRIB became enabled")
-    if cfg.get("Settings", "OpenGL") != "0":
-        raise RuntimeError("Software default was overridden")
+    expected_gl = "1" if args.opengl and not args.software_recovery else "0"
+    if cfg.get("Settings", "OpenGL") != expected_gl:
+        raise RuntimeError("Selected renderer was overridden")
+    if expected_gl == "1" and "OpenGL-> Renderer String:" not in final_log:
+        raise RuntimeError("OpenGL did not initialize")
     for plugin in preview.BUNDLED:
         if cfg.get(f"PlugIns/lib{plugin}_pi.so", "bEnabled") != "1":
             raise RuntimeError(f"Bundled plugin disabled after initialization: {plugin}")
     assert not (Path.home() / ".opencpn").exists(), "Isolated launch touched ordinary profile"
     subprocess.run(["opencpn-chart-aware", "--diagnostics"], check=True)
-    print("PASS: clean-profile startup, default plugins, native GRIB disabled, ordinary profile untouched.")
+    print(f"PASS: clean-profile startup, OpenGL={expected_gl}, default plugins, native GRIB disabled, ordinary profile untouched.")
 
 
 if __name__ == "__main__":

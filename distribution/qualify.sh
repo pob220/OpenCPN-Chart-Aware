@@ -12,7 +12,12 @@ apt-get install -y --no-install-recommends "$package" xvfb xauth xdotool binutil
 useradd --create-home --uid 1000 previewtest
 runuser -u previewtest -- python3 -m unittest discover -s /src/distribution/tests -v
 runuser -u previewtest -- dbus-run-session xvfb-run -a python3 /src/distribution/smoke.py
+useradd --create-home gltest
+runuser -u gltest -- dbus-run-session xvfb-run -a python3 /src/distribution/smoke.py --opengl
+useradd --create-home recoverytest
+runuser -u recoverytest -- dbus-run-session xvfb-run -a python3 /src/distribution/smoke.py --software-recovery
 helper=/usr/lib/opencpn-chart-aware/share/opencpn/plugins/xgrib_pi/bin/environmental-grib
 runuser -u previewtest -- "$helper" --help
+runuser -u previewtest -- python3 /src/distribution/test-helper.py
 python3 /src/distribution/test-replacement.py "$package"
 echo 'PASS: dependency-only Debian 13 runtime installation and GUI smoke'
