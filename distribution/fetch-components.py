@@ -11,7 +11,7 @@ import urllib.request
 def fetch(work):
     manifest = json.loads((Path(__file__).parent / "components.json").read_text())
     work.mkdir(parents=True, exist_ok=True)
-    for name in ("weather_routing", "xgrib", "climatology", "ocharts"):
+    for name in ("weather_routing", "xgrib", "climatology", "ocharts", "polar"):
         item = manifest[name]
         dest = work / name
         created = not dest.exists()

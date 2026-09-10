@@ -30,7 +30,13 @@ def main():
             # Accept only the expected disclaimer, not arbitrary dialogs.
             windows = subprocess.run(["xdotool", "search", "--name", "OpenCPN.*(Warning|Disclaimer)|Welcome to OpenCPN"], capture_output=True, text=True)
             for window in windows.stdout.split():
-                subprocess.run(["xdotool", "key", "--window", window, "Return"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                # The GTK HTML disclaimer has no default keyboard button.
+                # Its affirmative button is the rightmost footer button.
+                geometry = subprocess.check_output(["xdotool", "getwindowgeometry", "--shell", window], text=True)
+                dimensions = dict(line.split("=", 1) for line in geometry.splitlines())
+                subprocess.run(["xdotool", "mousemove", "--window", window,
+                                str(int(dimensions["WIDTH"]) - 50),
+                                str(int(dimensions["HEIGHT"]) - 25), "click", "1"], check=True)
             if "OpenCPN Initialized" in text and not windows.stdout.strip():
                 # First-run notices are scheduled after initial frame creation.
                 time.sleep(2)
@@ -38,7 +44,7 @@ def main():
                 break
             time.sleep(0.5)
         if not started:
-            windows = subprocess.run(["xdotool", "search", "--name", ".", "getwindowname"], capture_output=True, text=True)
+            windows = subprocess.run(["xdotool", "search", "--name", ".", "getwindowname", "%@"], capture_output=True, text=True)
             raise RuntimeError("GUI did not initialize. " + windows.stdout + "\n" + (log.read_text(errors="replace")[-8000:] if log.exists() else "No log"))
         text = log.read_text(errors="replace")
         for plugin in preview.BUNDLED:

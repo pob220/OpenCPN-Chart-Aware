@@ -48,6 +48,8 @@ public:
   MyApp();
   ~MyApp() {};
 
+  wxAppTraits* CreateTraits() override;
+
   bool OnInit() override;
   void BuildMainFrame();
   void LoadChartDatabase();

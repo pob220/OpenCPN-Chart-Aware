@@ -62,8 +62,9 @@ This supports Debian/APT installations only. It refuses manual installations,
 missing originals, and an APT plan which would remove unrelated packages. Before
 replacement it downloads and verifies the exact installed OpenCPN/opencpn-data
 packages into a private `package-recovery-*` directory. If those versions are no
-longer obtainable, it stops without removing anything. It then asks for `REPLACE`
-confirmation and uses sudo/APT for a separate package transaction. No purge is used.
+longer obtainable, it stops without removing anything. It asks for `REPLACE`
+confirmation before downloading recovery packages, then uses sudo/APT for a
+separately confirmed package transaction. No purge is used.
 
 Replacement installs the conventional `opencpn` command, but still uses the preview
 profile copy. The original profile is left untouched. Follow the saved recovery

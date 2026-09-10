@@ -122,7 +122,7 @@ def main(work):
     licenses.mkdir(exist_ok=True)
     for license_file in HERE.parent.glob("COPYING.*"):
         shutil.copy2(license_file, licenses / license_file.name)
-    for name in ("weather_routing", "xgrib", "climatology", "ocharts"):
+    for name in ("weather_routing", "xgrib", "climatology", "ocharts", "polar"):
         target = licenses / name
         target.mkdir(exist_ok=True)
         for pattern in ("COPYING*", "LICENSE*", "README*"):

@@ -708,6 +708,43 @@ int MyApp::OnRun() {
   return wxAppConsole::OnRun();
 }
 
+#if defined(__linux__) && !defined(__ANDROID__)
+namespace {
+// Plugins also call wxStandardPaths directly. --configdir alone does not
+// isolate their generated GRIBs, catalog metadata or crash/load stamps.
+class ChartAwarePaths : public wxStandardPaths {
+public:
+  explicit ChartAwarePaths(const wxString& profile) : m_profile(profile) {}
+  wxString GetUserDataDir() const override { return m_profile; }
+  wxString GetUserLocalDataDir() const override { return m_profile; }
+
+private:
+  wxString m_profile;
+};
+
+class ChartAwareAppTraits : public wxGUIAppTraits {
+public:
+  explicit ChartAwareAppTraits(const wxString& profile) : m_paths(profile) {}
+  wxStandardPaths& GetStandardPaths() override { return m_paths; }
+
+private:
+  ChartAwarePaths m_paths;
+};
+}  // namespace
+#endif
+
+wxAppTraits* MyApp::CreateTraits() {
+#if defined(__linux__) && !defined(__ANDROID__)
+  wxString profile, prefix;
+  if (wxGetEnv("OPENCPN_CHART_AWARE_PROFILE", &profile) &&
+      wxGetEnv("OPENCPN_CHART_AWARE_PREFIX", &prefix) &&
+      wxFileName(profile).IsAbsolute() && wxFileName(prefix).IsAbsolute()) {
+    return new ChartAwareAppTraits(profile);
+  }
+#endif
+  return wxApp::CreateTraits();
+}
+
 MyApp::MyApp()
     : m_checker(InstanceCheck::GetInstance()),
       m_rest_server(PINCreateDialog::GetDlgCtx(), RouteCtxFactory(),
