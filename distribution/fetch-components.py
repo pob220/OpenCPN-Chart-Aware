@@ -14,14 +14,12 @@ def fetch(work):
     for name in ("weather_routing", "xgrib", "climatology", "ocharts"):
         item = manifest[name]
         dest = work / name
-        if not dest.exists():
+        created = not dest.exists()
+        if created:
             subprocess.run(["git", "clone", "--no-checkout", item["repository"], str(dest)], check=True)
         # Never change an existing dirty source checkout.
-        if subprocess.check_output(["git", "-C", str(dest), "status", "--porcelain"]).strip():
-            # A newly cloned --no-checkout repo has staged deletions: use a
-            # bare HEAD test to distinguish it from a populated checkout.
-            if (dest / "CMakeLists.txt").exists():
-                raise RuntimeError(f"Dirty component: {dest}")
+        if not created and subprocess.check_output(["git", "-C", str(dest), "status", "--porcelain"]).strip():
+            raise RuntimeError(f"Dirty component: {dest}")
         subprocess.run(["git", "-C", str(dest), "checkout", "--detach", item["revision"]], check=True)
         subprocess.run(["git", "-C", str(dest), "submodule", "update", "--init", "--recursive"], check=True)
         actual = subprocess.check_output(["git", "-C", str(dest), "rev-parse", "HEAD"], text=True).strip()

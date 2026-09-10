@@ -3,6 +3,7 @@ set -euo pipefail
 source_dir=$(cd "$(dirname "$0")/.." && pwd)
 work=${1:?Usage: build-core.sh WORK-DIRECTORY}
 mkdir -p "$work/core" "$work/stage" "$work/logs"
+git -C "$source_dir" rev-parse HEAD > "$work/logs/core-source-commit.txt"
 cmake -S "$source_dir" -B "$work/core" -G Ninja \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo \
   -DCMAKE_INSTALL_PREFIX=/usr/lib/opencpn-chart-aware \

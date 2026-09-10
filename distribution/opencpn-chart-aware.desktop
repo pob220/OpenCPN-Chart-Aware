@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Name=OpenCPN Chart-Aware Preview
+Comment=Stable-based chart/depth-aware weather routing
+Exec=opencpn-chart-aware %F
+Icon=opencpn-chart-aware
+Terminal=false
+Categories=Education;Geography;Science;
+Actions=Software;Diagnostics;
+
+[Desktop Action Software]
+Name=Start with software rendering
+Exec=opencpn-chart-aware --software
+
+[Desktop Action Diagnostics]
+Name=Show component versions
+Exec=x-terminal-emulator -e opencpn-chart-aware --diagnostics

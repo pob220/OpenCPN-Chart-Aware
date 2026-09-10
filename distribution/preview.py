@@ -183,6 +183,10 @@ def setup_dialog(root):
     ttk.Button(frame, text="Choose another profile…", command=choose).pack(anchor="w", pady=5)
     ttk.Label(frame, textvariable=source, wraplength=650).pack(anchor="w")
     renderer = tk.StringVar(value="software")
+    mode = tk.StringVar(value="isolated")
+    ttk.Label(frame, text="Installation mode:").pack(anchor="w", pady=(12, 2))
+    ttk.Radiobutton(frame, text="Keep existing OpenCPN — isolated preview (recommended)", variable=mode, value="isolated").pack(anchor="w")
+    ttk.Radiobutton(frame, text="Replace Debian/APT OpenCPN after backup (opens confirmation terminal)", variable=mode, value="replace").pack(anchor="w")
     ttk.Label(frame, text="Rendering (can be changed later in OpenCPN):").pack(anchor="w", pady=(12, 2))
     ttk.Radiobutton(frame, text="Software — conservative default", variable=renderer, value="software").pack(anchor="w")
     ttk.Radiobutton(frame, text="OpenGL", variable=renderer, value="opengl").pack(anchor="w")
@@ -192,12 +196,17 @@ def setup_dialog(root):
     result = []
     def create():
         try:
-            result.append(initialize(root, Path(source.get()) if source.get() else None, renderer.get()))
+            profile = initialize(root, Path(source.get()) if source.get() else None, renderer.get())
+            if mode.get() == "replace":
+                subprocess.Popen(["x-terminal-emulator", "-e", "python3", str(PREFIX / "share/opencpn-chart-aware/replace.py")])
+                messagebox.showinfo("Profile created", "Complete the separately confirmed replacement in the terminal, then start OpenCPN Chart-Aware from the menu. If replacement is cancelled, the isolated installation remains usable.")
+            else:
+                result.append(profile)
         except Exception as exc:
             messagebox.showerror("Setup not completed", str(exc))
             return
         window.destroy()
-    ttk.Button(frame, text="Create isolated profile and start OpenCPN", command=create).pack(anchor="e")
+    ttk.Button(frame, text="Create profile and continue", command=create).pack(anchor="e")
     window.mainloop()
     return result[0] if result else None
 
