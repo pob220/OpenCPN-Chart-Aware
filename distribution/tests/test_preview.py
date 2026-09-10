@@ -23,6 +23,7 @@ class SetupTest(unittest.TestCase):
         self.assertEqual(cfg["PlugIns/libgrib_pi.so"]["bEnabled"], "0")
         self.assertEqual(cfg["PlugIns/libxgrib_pi.so"]["bEnabled"], "1")
         self.assertEqual(cfg["Settings"]["OpenGL"], "0")
+        self.assertEqual(cfg["Settings/GlobalState"]["AllowArbitrarySystemPlugins"], "1")
         self.assertEqual(cfg["PlugIns/WeatherRouting"]["EnforceExperimentalChartSafety"], "1")
 
     def test_import_does_not_enable_vulkan_or_connections(self):

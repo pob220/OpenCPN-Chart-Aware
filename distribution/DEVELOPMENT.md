@@ -10,10 +10,12 @@ clean committed sources, not from a tester's working tree:
 - `060cc0273` and `3eefb6d4f`: atlas boundary performance.
 - `00be12265`: stable provider identities.
 
-Packaging adds one opt-in Linux path branch for the preview: both discovery and
-plugin-manager install destinations use its profile. Without the preview launcher
-environment, upstream behaviour remains unchanged. HOME is never replaced.
-Renderer/external-control implementation changes are absent from the baseline.
+Packaging adds opt-in Linux isolation for plugin discovery, resources, installer
+metadata, and wxWidgets application data. Both core APIs and plugins using
+wxStandardPaths directly use the separate profile. The launcher also preserves
+the chosen software/OpenGL setting on first run and upgrades. Without the preview
+launcher environment, upstream behaviour remains unchanged. HOME is never replaced.
+Vulkan/external-control implementation changes are absent from the baseline.
 The historical chart aggregate also includes the segment-safety diagnostic runner
 and a developer glutil-path lookup improvement; these are visible in the diff.
 

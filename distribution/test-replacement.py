@@ -3,13 +3,52 @@
 import hashlib
 import json
 import os
+import pty
+import select
 from pathlib import Path
 import subprocess
 import sys
+import time
 
 
 def run(args, **kwargs):
     return subprocess.run(args, check=True, text=True, **kwargs)
+
+
+def confirm_replacement(args):
+    # Send each answer only after its prompt. Piping both lines at once lets
+    # Python's input buffer consume the answer intended for the APT child.
+    master, slave = pty.openpty()
+    process = subprocess.Popen(args, stdin=slave, stdout=slave, stderr=slave)
+    os.close(slave)
+    pending = ''
+    prompts = [('Type REPLACE to continue:', b'REPLACE\n'), ('Continue? [Y/n]', b'y\n')]
+    deadline = time.monotonic() + 180
+    try:
+        while time.monotonic() < deadline:
+            if select.select([master], [], [], 1)[0]:
+                try:
+                    data = os.read(master, 65536).decode(errors='replace')
+                except OSError:
+                    break
+                if not data:
+                    break
+                print(data, end='', flush=True)
+                pending += data
+                if prompts and prompts[0][0] in pending:
+                    os.write(master, prompts.pop(0)[1])
+                    pending = ''
+            elif process.poll() is not None:
+                break
+        if process.wait(timeout=5) != 0:
+            raise RuntimeError('Interactive replacement failed')
+        if prompts:
+            raise RuntimeError('Expected replacement confirmations were not shown')
+    finally:
+        if process.poll() is None:
+            process.kill()
+            process.wait()
+        os.close(master)
 
 
 def main(package):
@@ -33,7 +72,7 @@ def main(package):
     rule = Path('/etc/sudoers.d/chart-aware-test')
     rule.write_text('replacementtest ALL=(root) NOPASSWD: /usr/bin/apt\n')
     rule.chmod(0o440)
-    run(as_user + ['opencpn-chart-aware-replace'], input='REPLACE\ny\n')
+    confirm_replacement(as_user + ['opencpn-chart-aware-replace'])
     recovery = next(state.glob('package-recovery-*'))
     manifest = json.loads((recovery / 'recovery.json').read_text())
     for name, expected in manifest['sha256'].items():

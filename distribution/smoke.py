@@ -67,6 +67,13 @@ def main():
                 raise RuntimeError("OpenCPN failed to stop within the timeout")
     if process.returncode != 0:
         raise RuntimeError(f"OpenCPN shutdown failed: {process.returncode}")
+    final_log = log.read_text(errors="replace")
+    if "opencpn::MyApp exiting cleanly" not in final_log:
+        raise RuntimeError("Normal application shutdown was not logged")
+    for plugin in preview.BUNDLED:
+        if not any("Deactivating PlugIn:" in line and f"lib{plugin}_pi.so" in line
+                   for line in final_log.splitlines()):
+            raise RuntimeError(f"Plugin lifecycle did not reach deinitialization: {plugin}")
     cfg = configparser.ConfigParser(strict=False, interpolation=None)
     cfg.read(conf)
     if cfg.get("PlugIns/libgrib_pi.so", "bEnabled") != "0":
