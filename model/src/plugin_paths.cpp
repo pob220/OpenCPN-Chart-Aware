@@ -120,6 +120,23 @@ void PluginPaths::InitFlatpakPaths() {
 void PluginPaths::InitLinuxPaths() {
   using namespace std;
 
+  // Preview packaging: isolate both plugin discovery AND plugin-manager
+  // installation destinations without changing HOME (o-charts identity).
+  // This opt-in branch leaves upstream paths unchanged for normal launches.
+  const char* profile = getenv("OPENCPN_CHART_AWARE_PROFILE");
+  const char* bundle = getenv("OPENCPN_CHART_AWARE_PREFIX");
+  if (profile && profile[0] == '/' && bundle && bundle[0] == '/') {
+    const string user_prefix = string(profile) + "/plugins";
+    m_userLibdir = user_prefix + "/lib";
+    m_user_bindir = user_prefix + "/bin";
+    m_user_datadir = user_prefix + "/share";
+    m_libdirs = {m_userLibdir + "/opencpn", string(bundle) + "/lib/opencpn"};
+    m_bindirs = {m_user_bindir, string(bundle) + "/bin"};
+    m_datadirs = {m_user_datadir + "/opencpn/plugins",
+                  string(bundle) + "/share/opencpn/plugins"};
+    return;
+  }
+
   if (g_bportable) {
     m_userLibdir = g_BasePlatform->GetPrivateDataDir().ToStdString() +
                    "/plugins/lib";  // m_home + "/.local/lib";
