@@ -1,0 +1,57 @@
+name: Debian 13 chart-aware installer
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['distribution/**', 'gui/**', 'model/**', 'include/**', 'test/**', '.github/workflows/debian13.yml']
+permissions:
+  contents: read
+concurrency:
+  group: debian13-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  installer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build Debian 13 toolchain
+        run: docker build -t chart-aware-builder -f distribution/Dockerfile distribution
+      - name: Build pinned core and plugin stack
+        run: |
+          mkdir -p "$RUNNER_TEMP/chart-aware-work"
+          sudo chown 1000:1000 "$RUNNER_TEMP/chart-aware-work"
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/src:ro" \
+            -v "$RUNNER_TEMP/chart-aware-work:/work" \
+            -e OCPN_TARGET=trixie -e BUILD_JOBS=3 chart-aware-builder bash -c '
+              set -euo pipefail
+              git config --global --add safe.directory /src
+              python3 /src/distribution/fetch-components.py /work/inputs
+              bash /src/distribution/build-core.sh /work
+              bash /src/distribution/build-plugins.sh /work
+              python3 /src/distribution/make-package.py /work
+            '
+      - name: Qualify on clean Debian 13 without compilers
+        run: |
+          package=$(find "$RUNNER_TEMP/chart-aware-work/packages" -maxdepth 1 -name '*.deb' -print -quit)
+          test -n "$package"
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/src:ro" \
+            -v "$RUNNER_TEMP/chart-aware-work/packages:/packages:ro" \
+            debian:trixie bash /src/distribution/qualify.sh "/packages/$(basename "$package")" \
+            2>&1 | tee "$RUNNER_TEMP/chart-aware-work/logs/clean-install.log"
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: opencpn-chart-aware-debian13-amd64
+          path: ${{ runner.temp }}/chart-aware-work/packages/*
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: debian13-qualification-logs
+          path: ${{ runner.temp }}/chart-aware-work/logs/
+          if-no-files-found: warn

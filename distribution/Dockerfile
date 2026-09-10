@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libaec-dev libblosc-dev libeccodes-dev libhdf5-dev libnetcdf-dev \
     libproj-dev libqhull-dev libsodium-dev librsvg2-common libzip-dev \
     libzstd-dev patchelf lintian && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends jq libsndfile1-dev && rm -rf /var/lib/apt/lists/*
 RUN useradd --uid 1000 --create-home builder
 USER builder
 WORKDIR /src

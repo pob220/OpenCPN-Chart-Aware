@@ -734,6 +734,17 @@ void AbstractPlatform::CloseLogFile() {
 }
 
 wxString AbstractPlatform::GetPluginDataPath() {
+#ifdef __linux__
+  // Match the preview's isolated PluginPaths install/search policy. The
+  // ordinary Linux helper prepends ~/.local/share even with XDG_DATA_DIRS,
+  // which otherwise permits old plugin resources to shadow the bundle.
+  const char* profile = getenv("OPENCPN_CHART_AWARE_PROFILE");
+  const char* bundle = getenv("OPENCPN_CHART_AWARE_PREFIX");
+  if (profile && profile[0] == '/' && bundle && bundle[0] == '/') {
+    return wxString::FromUTF8(profile) + "/plugins/share/opencpn/plugins;" +
+           wxString::FromUTF8(bundle) + "/share/opencpn/plugins";
+  }
+#endif
   if (g_bportable) {
     wxString sep = wxFileName::GetPathSeparator();
     wxString ret = GetPrivateDataDir() + sep + "plugins";
