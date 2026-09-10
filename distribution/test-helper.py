@@ -27,6 +27,6 @@ with tempfile.TemporaryDirectory(prefix='chart-aware-helper-') as directory:
     inspection = result['output_inspection']
     assert inspection['short_name_counts']['10u'] == 2
     assert inspection['short_name_counts']['10v'] == 2
-    assert inspection['current_component_counts'] == {'u_49': 3, 'v_50': 3}
+    assert inspection['current_component_counts'] == {'u_49': 3, 'v_50': 3, 'u_grib2': 0, 'v_grib2': 0}
     assert inspection['valid_times'] == ['20260712T0000', '20260712T0300', '20260712T0600']
 print('PASS: installed xGRIB helper merges weather/current GRIB fixtures on dependency-only Debian 13.')
