@@ -524,7 +524,14 @@ void OCPNPlatform::Initialize_2() {
 //  Called from MyApp()::OnInit() just after gFrame is created, so gFrame is
 //  available
 void OCPNPlatform::Initialize_3() {
-  bool bcapable = IsGLCapable();
+  // The distribution's first-run dialog already selected a renderer. Preserve
+  // that explicit choice on first launch and upgrades; software recovery must
+  // also avoid probing a possibly broken GL driver. Stock launches are unchanged.
+  wxString distribution_profile;
+  const bool preserve_renderer =
+      wxGetEnv("OPENCPN_CHART_AWARE_PROFILE", &distribution_profile) &&
+      wxFileName(distribution_profile).IsAbsolute();
+  bool bcapable = (preserve_renderer && !g_bopengl) ? false : IsGLCapable();
 
 #ifdef ocpnARM  // Boot arm* platforms (meaning rPI) without OpenGL on first run
   // bcapable = false;
@@ -547,7 +554,8 @@ void OCPNPlatform::Initialize_3() {
   // or fresh install
 
 #ifdef ocpnUSE_GL
-  if ((g_bFirstRun || g_bUpgradeInProcess || bAndroid) && bcapable) {
+  if ((g_bFirstRun || g_bUpgradeInProcess || bAndroid) && bcapable &&
+      !preserve_renderer) {
     g_bopengl = true;
 
     // Set up visually nice options

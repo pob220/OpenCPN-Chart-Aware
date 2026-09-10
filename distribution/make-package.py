@@ -3,6 +3,7 @@
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -39,11 +40,15 @@ def dependencies(root):
             if not library or root in library.parents or library in checked:
                 continue
             checked.add(library)
-            owner = subprocess.run(["dpkg-query", "-S", str(library)], capture_output=True, text=True)
+            owner = subprocess.run(["dpkg-query", "-S", str(library.resolve())], capture_output=True, text=True)
             if owner.returncode:
-                owner = subprocess.run(["dpkg-query", "-S", str(library.resolve())], capture_output=True, text=True, check=True)
-            package = owner.stdout.split(": ", 1)[0].split(":", 1)[0]
-            packages.add(package)
+                owner = subprocess.run(["dpkg-query", "-S", str(library)], capture_output=True, text=True, check=True)
+            owners = [line.split(": ", 1)[0].split(":", 1)[0]
+                      for line in owner.stdout.splitlines()
+                      if re.match(r"^[a-z0-9][a-z0-9+.-]*(?::[a-z0-9-]+)?: /", line)]
+            if not owners:
+                raise RuntimeError(f"Cannot identify Debian owner of {library}: {owner.stdout}")
+            packages.update(owners)
     return sorted(packages)
 
 

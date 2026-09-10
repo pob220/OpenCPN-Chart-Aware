@@ -67,6 +67,7 @@ def config_updates(text, updates):
 
 def initial_config(text, renderer):
     updates = {("Settings", "OpenGL"): "1" if renderer == "opengl" else "0",
+               ("Settings/GlobalState", "AllowArbitrarySystemPlugins"): "1",
                ("Settings", "RendererBackend"): "opengl-legacy" if renderer == "opengl" else "software",
                ("Settings/NMEADataSource", "DataConnections"): "",
                ("PlugIns/WeatherRouting", "UseExperimentalChartSafety"): "1",
