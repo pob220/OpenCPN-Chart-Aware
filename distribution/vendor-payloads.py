@@ -4,8 +4,8 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import subprocess
 import sys
-import tarfile
 import tempfile
 
 
@@ -19,8 +19,12 @@ def main(work):
             assert hashlib.file_digest(stream, "sha256").hexdigest() == expected
         with tempfile.TemporaryDirectory(dir=work) as directory:
             root = Path(directory)
-            with tarfile.open(archive) as tar:
-                tar.extractall(root, filter="data")
+            # These vendor archives were verified against immutable SHA-256
+            # pins above. Debian 12's Python lacks tarfile extraction filters;
+            # use GNU tar, retaining its default path traversal protections.
+            subprocess.run(["tar", "--extract", "--gzip", "--file", str(archive),
+                            "--directory", str(root), "--no-same-owner",
+                            "--no-same-permissions"], check=True)
             roots = [p for p in root.iterdir() if p.is_dir()]
             assert len(roots) == 1
             payload = roots[0] / "usr/local" if name == "polar" else roots[0]
