@@ -1,16 +1,22 @@
-# Debian 13 Chart-Aware Preview — 10 September 2026
+# Debian 13 Chart-Aware Preview — 11 September 2026
 
-First **Debian 13 amd64 testing installer**, based on upstream OpenCPN 5.14.0.
+Refreshed **Debian 13 amd64 testing installer**, based on upstream OpenCPN 5.14.0.
 This is a focused distribution, not the broader Core-Hardening developer bundle.
 It is a prerelease for desktop testing, not a navigational safety certification.
+
+This refresh updates Weather Routing to **1.17.2.0**, fixing Climatology wind-atlas
+initialization and longitude differences in course calculations, while retaining
+the route-table lifetime fix. Other bundled plugin and core-code pins are unchanged.
+The existing release URL is retained. Installing the newer package with APT upgrades
+the preview without removing its separate profile.
 
 ## Install
 
 Download the `.deb` and matching `.sha256` release assets into one directory:
 
 ```sh
-sha256sum --check opencpn-chart-aware-preview_5.14.0+chartaware.20260910.2_amd64.deb.sha256
-sudo apt install ./opencpn-chart-aware-preview_5.14.0+chartaware.20260910.2_amd64.deb
+sha256sum --check opencpn-chart-aware-preview_5.14.0+chartaware.20260911.1_amd64.deb.sha256
+sudo apt install ./opencpn-chart-aware-preview_5.14.0+chartaware.20260911.1_amd64.deb
 ```
 
 Close existing OpenCPN instances, then open **OpenCPN Chart-Aware Preview** from
@@ -30,7 +36,7 @@ assistant. See [the installation and recovery guide](https://github.com/pob220/O
 
 - OpenCPN 5.14.0 with chart/depth safety services, semantic-provider support and
   focused installation/profile-isolation changes.
-- Weather Routing **1.17.1.0**, including the route-table lifetime fix.
+- Weather Routing **1.17.2.0**, including the Climatology/longitude corrections and route-table lifetime fix.
 - xGRIB **0.2.4.1**, Environmental GRIB Generator **0.1.7** and its runtime.
 - Updated Climatology with dataset **ocpn-climatology-2026.2**.
 - Polar **1.2.38.0**.
@@ -45,7 +51,7 @@ experimental graphics variant remains separate follow-up work.
 
 ## Verification performed
 
-The uploaded binary was built in Debian 13 and tested outside the compiler image:
+The uploaded binary passed [GitHub Actions run 34582785496](https://github.com/pob220/OpenCPN-Chart-Aware/actions/runs/34582785496), building in Debian 13 and testing outside the compiler image:
 
 - Core chart/depth tests: **14 passed**.
 - Weather Routing tests: **222 passed**.
@@ -53,8 +59,8 @@ The uploaded binary was built in Debian 13 and tested outside the compiler image
 - Climatology tests: **3 passed**; packaged dataset manifest hashes verified.
 - Profile setup tests: **8 passed**.
 - Dependency-only Debian 13 APT installation and real GUI startup/clean shutdown.
-- All five plugins loaded and deinitialized; Weather Routing reported full
-  chart-safety service availability; native GRIB remained disabled.
+- All five plugins loaded and deinitialized; Weather Routing initialized its
+  chart-safety host; native GRIB remained disabled.
 - Software default, explicit OpenGL under Mesa/Xvfb, and software recovery checked.
 - Ordinary `~/.opencpn` remained absent during isolated GUI tests.
 - Installed xGRIB helper merged synthetic weather/current GRIBs successfully.
@@ -64,12 +70,14 @@ The uploaded binary was built in Debian 13 and tested outside the compiler image
 
 Component pins and vendor SHA-256 hashes are in the `components.json` release
 asset and [source manifest](https://github.com/pob220/OpenCPN-Chart-Aware/blob/main/distribution/components.json). The binary core revision is
-`0180420679673ab0543220deb8c0ad08b65ea491`; package assembly revision is
-`20f65a938122172cd6d148821da0938881e8d8da`. Later changes to the release tag are
-qualification scripts/documentation, not unrecorded changes to those binaries.
-Test reports accompany the release. The GitHub workflow separately rebuilds and
-qualifies the stack; its current status must not be confused with these local
-container results.
+`123c39d858fca6ef1fb46e8b0e6cd45782c95fe4`, also the package assembly revision.
+Weather Routing is pinned to `49036e934a4102d8426819f92f3cc5f61ead717f`.
+The downloaded installer was additionally checked against its checksum and its
+embedded version/source manifest; the attached `components.json` is that embedded
+manifest. Test reports accompany the release. The original preview tag name is
+retained for a stable download link; the revisions above identify the new binaries.
+
+Installer SHA-256: `d2fb05a3f9274d00448253592bc246408228fcfbf1276d73ad3624295a9c7f9c`.
 
 ## Still requires real desktop testing
 
