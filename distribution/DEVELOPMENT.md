@@ -19,7 +19,16 @@ Vulkan/external-control implementation changes are absent from the baseline.
 The historical chart aggregate also includes the segment-safety diagnostic runner
 and a developer glutil-path lookup improvement; these are visible in the diff.
 
-## Debian 13 amd64
+## Debian 12 and Debian 13 amd64
+
+The installer workflow builds and qualifies both bookworm and trixie independently.
+To build Debian 12, add `--build-arg DEBIAN_SUITE=bookworm` to the Docker build,
+use a separate `bookworm` image tag and work directory, and set `OCPN_TARGET=bookworm`
+for the plugin build. Package assembly detects the actual build distribution,
+selects its wxWebView runtime package and records the correct target. Its default
+Debian 12 package version has a `+deb12` suffix. Do not reuse compiled staging
+directories between the two distributions. The core and plugin source pins are
+otherwise the same.
 
 Use an empty dedicated work directory outside the checkout. Build in Debian 13:
 
@@ -42,7 +51,7 @@ vendor Debian 12 binary, requiring Debian 13 runtime qualification; the modified
 o-charts provider and the other three plugins are built natively on Debian 13.
 
 The package assembly fails for missing plugins/dependencies and records the build
-revision/checksums. A separate clean Debian 13 runtime test must install the .deb
+revision/checksums. A separate clean runtime of the matching Debian version must install the .deb
 with APT; the compiler image is not evidence that package dependencies are complete.
 
 Run setup unit tests with `python3 -m unittest discover -s distribution/tests -v`.
@@ -53,7 +62,7 @@ renderer defaults, native-GRIB disabling, running-process checks and package rol
 
 1. Run core chart/depth tests and all component tests; reject zero-test reports.
 2. Verify Climatology dataset manifest hashes and the o-charts semantic export.
-3. Install on a clean Debian 13 runtime with declared dependencies only.
+3. Install on a clean matching Debian runtime with declared dependencies only.
 4. Exercise GUI startup, plugin initialization, xGRIB helper and software recovery.
 5. Test installation alongside the Debian package, profile import, upgrade/remove,
    explicitly confirmed replacement and restoration of saved originals.

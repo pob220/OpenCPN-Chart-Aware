@@ -1,11 +1,13 @@
-# Debian 13 installation
+# Debian 12 and Debian 13 installation
 
 This is a testing preview, not an official OpenCPN release or a substitute for
 checking a passage against current charts and conditions. Initially amd64 only.
 
 ## Install
 
-Download the qualified `.deb` and its SHA-256 file from this repository's releases.
+Download the qualified `.deb` for your Debian version and its SHA-256 file from this repository's releases.
+Debian 12 (bookworm) packages carry a `+deb12` version suffix. Debian 13
+(trixie) packages must not be installed on Debian 12 by upgrading its system libraries.
 In the download directory, verify the checksum, then install the exact file:
 
 ```
@@ -13,7 +15,7 @@ sha256sum --check opencpn-chart-aware-preview_VERSION_amd64.deb.sha256
 sudo apt install ./opencpn-chart-aware-preview_VERSION_amd64.deb
 ```
 
-APT installs the declared Debian 13 dependencies. Internet access is needed for
+APT installs the declared dependencies for the package's Debian version. Internet access is needed for
 dependencies not already installed. Start **OpenCPN Chart-Aware Preview** from
 the application menu, as your ordinary desktop user (never with sudo).
 
@@ -42,7 +44,7 @@ need in Options; do not enable outputs to an autopilot just to test routing.
 - Profile backups: `~/.local/share/opencpn-chart-aware/backup-*/`
 - Additional plugins: `profile/plugins/{lib,bin,share}/`
 
-Use OpenCPN's normal plugin manager for additional Debian 13-compatible plugins.
+Use OpenCPN's normal plugin manager for additional plugins compatible with your Debian version.
 Its install destinations and search paths are isolated, not just its config file.
 Do not copy your old `.so` files into the new installation. Catalog availability of
 third-party plugins is outside this distribution's control. Updates to bundled

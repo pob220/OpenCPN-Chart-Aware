@@ -1,4 +1,4 @@
-name: Debian 13 chart-aware installer
+name: Debian chart-aware installers
 on:
   workflow_dispatch:
   push:
@@ -7,18 +7,27 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: debian13-${{ github.ref }}
+  group: debian-installers-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   installer:
+    name: Debian ${{ matrix.version }} amd64
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: bookworm
+            version: '12'
+          - suite: trixie
+            version: '13'
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Build Debian 13 toolchain
-        run: docker build -t chart-aware-builder -f distribution/Dockerfile distribution
+      - name: Build Debian ${{ matrix.version }} toolchain
+        run: docker build --build-arg DEBIAN_SUITE=${{ matrix.suite }} -t chart-aware-builder -f distribution/Dockerfile distribution
       - name: Build pinned core and plugin stack
         run: |
           mkdir -p "$RUNNER_TEMP/chart-aware-work"
@@ -26,7 +35,7 @@ jobs:
           docker run --rm \
             -v "$GITHUB_WORKSPACE:/src:ro" \
             -v "$RUNNER_TEMP/chart-aware-work:/work" \
-            -e OCPN_TARGET=trixie -e BUILD_JOBS=3 chart-aware-builder bash -c '
+            -e OCPN_TARGET=${{ matrix.suite }} -e BUILD_JOBS=3 chart-aware-builder bash -c '
               set -euo pipefail
               git config --global --add safe.directory /src
               python3 /src/distribution/fetch-components.py /work/inputs
@@ -34,7 +43,7 @@ jobs:
               bash /src/distribution/build-plugins.sh /work
               python3 /src/distribution/make-package.py /work
             '
-      - name: Qualify on clean Debian 13 without compilers
+      - name: Qualify on clean Debian ${{ matrix.version }} without compilers
         run: |
           # The builder creates this directory as container UID 1000. The host
           # runner runs tee below, so it must own the directory for the new log.
@@ -45,17 +54,17 @@ jobs:
           docker run --rm \
             -v "$GITHUB_WORKSPACE:/src:ro" \
             -v "$RUNNER_TEMP/chart-aware-work/packages:/packages:ro" \
-            debian:trixie bash /src/distribution/qualify.sh "/packages/$(basename "$package")" \
+            debian:${{ matrix.suite }} bash /src/distribution/qualify.sh "/packages/$(basename "$package")" \
             2>&1 | tee "$RUNNER_TEMP/chart-aware-work/logs/clean-install.log"
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: opencpn-chart-aware-debian13-amd64
+          name: opencpn-chart-aware-debian${{ matrix.version }}-amd64
           path: ${{ runner.temp }}/chart-aware-work/packages/*
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: debian13-qualification-logs
+          name: debian${{ matrix.version }}-qualification-logs
           path: ${{ runner.temp }}/chart-aware-work/logs/
           if-no-files-found: warn
