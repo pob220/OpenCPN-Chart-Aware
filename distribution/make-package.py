@@ -7,6 +7,7 @@ import platform
 import re
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
 
@@ -83,6 +84,8 @@ def main(work):
     runtime_files = [prefix / "lib/opencpn/libo-charts_pi.so", prefix / "bin/oexserverd"]
     runtime_files.extend(p for p in (prefix / "lib/opencpn").glob("libtss2*.so*") if not p.is_symlink())
     for file in runtime_files:
+        # Vendor runtime files can be read-only. Patch only our staged copies.
+        file.chmod(file.stat().st_mode | stat.S_IWUSR)
         subprocess.run(["patchelf", "--set-rpath", "$ORIGIN:$ORIGIN/../lib/opencpn", str(file)], check=True)
     required = ["weather_routing", "xgrib", "climatology", "polar", "o-charts", "grib"]
     for name in required:
