@@ -18,5 +18,7 @@ runuser -u gltest -- dbus-run-session xvfb-run -a python3 /src/distribution/smok
 useradd --create-home recoverytest
 runuser -u recoverytest -- dbus-run-session xvfb-run -a python3 /src/distribution/smoke.py --software-recovery
 runuser -u previewtest -- python3 /src/distribution/test-helper.py
+useradd --create-home routingtest
+runuser -u routingtest -- python3 /src/distribution/run-route-suite.py /home/routingtest/route-controls
 python3 /src/distribution/test-replacement.py "$package"
 echo "PASS: dependency-only Debian $VERSION_ID runtime installation and GUI smoke"

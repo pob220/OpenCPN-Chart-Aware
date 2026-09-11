@@ -26,6 +26,16 @@ there tests isolated installation and profile-preserving reinstallation, and
 explicitly skips stock-package replacement/recovery. Debian 13 also exercises
 replacement and restoration using its archive's stock OpenCPN package.
 
+Installed routing regression checks use the packaged boat/polar and synthetic
+wind fixture, then bundled Climatology in the South Pacific with currents off
+and on, plus a date-line crossing. Each starts a fresh private profile under
+Xvfb and requires a successful process exit and a complete route reaching the
+specified endpoints. These deliberately disable chart/land checks to isolate
+environment initialization and longitude/course constraints; they do not
+qualify chart-backed passage safety. The ordinary launcher is tested separately
+by `smoke.py`; the route harness invokes the same binary/environment directly
+to enable the plugin's existing test-only headless scenario hook.
+
 The installer workflow builds and qualifies both bookworm and trixie independently.
 To build Debian 12, add `--build-arg DEBIAN_SUITE=bookworm` to the Docker build,
 use a separate `bookworm` image tag and work directory, and set `OCPN_TARGET=bookworm`

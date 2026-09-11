@@ -76,7 +76,7 @@ def main(work):
     if subprocess.check_output(["dpkg", "--print-architecture"], text=True).strip() != "amd64":
         raise RuntimeError("Initial vendor runtime pins are amd64-only.")
     distro_version = debian_version()
-    default_version = "5.14.0+chartaware.20260910.2" + ("+deb12" if distro_version == "12" else "")
+    default_version = "5.14.0+chartaware.20260911.2" + ("+deb12" if distro_version == "12" else "")
     version = os.environ.get("PREVIEW_VERSION", default_version)
     root = work / "deb-root"
     if root.exists():
