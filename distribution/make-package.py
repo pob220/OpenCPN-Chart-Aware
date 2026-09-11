@@ -1,16 +1,25 @@
 #!/usr/bin/python3
-"""Assemble the complete Debian 13 application and explicit replacement bridge."""
+"""Assemble the Debian 12/13 application and explicit replacement bridge."""
 import hashlib
 import json
 import os
+import platform
 import re
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
 
 HERE = Path(__file__).resolve().parent
 PREFIX = Path("usr/lib/opencpn-chart-aware")
+
+
+def debian_version():
+    release = platform.freedesktop_os_release()
+    if release.get("ID") != "debian" or release.get("VERSION_ID") not in ("12", "13"):
+        raise RuntimeError("Build packages on Debian 12 or Debian 13.")
+    return release["VERSION_ID"]
 
 
 def write(path, text, mode=0o644):
@@ -29,7 +38,8 @@ def dependencies(root):
     prefix = root / PREFIX
     directories = [prefix / 'lib/opencpn', prefix / 'lib', prefix / 'bin']
     xgrib = prefix / 'share/opencpn/plugins/xgrib_pi'
-    packages = {"python3", "python3-tk", "sudo", "xterm", "librsvg2-common", "ca-certificates", "libwxgtk-webview3.2-1t64"}
+    webview = "libwxgtk-webview3.2-1" + ("t64" if debian_version() == "13" else "")
+    packages = {"python3", "python3-tk", "sudo", "xterm", "librsvg2-common", "ca-certificates", webview}
     checked = set()
     for path in elf:
         search = ([xgrib / 'runtime/lib'] if xgrib in path.parents else []) + directories
@@ -43,9 +53,16 @@ def dependencies(root):
             if not library or root in library.parents or library in checked:
                 continue
             checked.add(library)
-            owner = subprocess.run(["dpkg-query", "-S", str(library.resolve())], capture_output=True, text=True)
-            if owner.returncode:
-                owner = subprocess.run(["dpkg-query", "-S", str(library)], capture_output=True, text=True, check=True)
+            # Bookworm's dpkg database can record /lib while ldd resolves the
+            # same file through /usr/lib on merged-/usr systems.
+            candidates = {library, library.resolve()}
+            for candidate in tuple(candidates):
+                if str(candidate).startswith("/usr/"):
+                    alias = Path(str(candidate)[4:])
+                    if alias.exists() and alias.resolve() == library.resolve():
+                        candidates.add(alias)
+            owner = subprocess.run(["dpkg-query", "-S", *map(str, sorted(candidates))],
+                                   capture_output=True, text=True)
             owners = [line.split(": ", 1)[0].split(":", 1)[0]
                       for line in owner.stdout.splitlines()
                       if re.match(r"^[a-z0-9][a-z0-9+.-]*(?::[a-z0-9-]+)?: /", line)]
@@ -58,7 +75,9 @@ def dependencies(root):
 def main(work):
     if subprocess.check_output(["dpkg", "--print-architecture"], text=True).strip() != "amd64":
         raise RuntimeError("Initial vendor runtime pins are amd64-only.")
-    version = os.environ.get("PREVIEW_VERSION", "5.14.0+chartaware.20260910.2")
+    distro_version = debian_version()
+    default_version = "5.14.0+chartaware.20260911.3" + ("+deb12" if distro_version == "12" else "")
+    version = os.environ.get("PREVIEW_VERSION", default_version)
     root = work / "deb-root"
     if root.exists():
         raise RuntimeError(f"Refusing to overwrite package staging: {root}")
@@ -72,6 +91,8 @@ def main(work):
     runtime_files = [prefix / "lib/opencpn/libo-charts_pi.so", prefix / "bin/oexserverd"]
     runtime_files.extend(p for p in (prefix / "lib/opencpn").glob("libtss2*.so*") if not p.is_symlink())
     for file in runtime_files:
+        # Vendor runtime files can be read-only. Patch only our staged copies.
+        file.chmod(file.stat().st_mode | stat.S_IWUSR)
         subprocess.run(["patchelf", "--set-rpath", "$ORIGIN:$ORIGIN/../lib/opencpn", str(file)], check=True)
     required = ["weather_routing", "xgrib", "climatology", "polar", "o-charts", "grib"]
     for name in required:
@@ -107,7 +128,7 @@ def main(work):
     source_revision = subprocess.check_output(["git", "-C", str(HERE.parent), "rev-parse", "HEAD"], text=True).strip()
     manifest = json.loads((doc / "components.json").read_text())
     core_revision = (work / "logs/core-source-commit.txt").read_text().strip()
-    manifest.update(distribution_revision=source_revision, core_revision=core_revision, package_version=version, target="debian13-amd64", renderer="software/OpenGL; no Vulkan")
+    manifest.update(distribution_revision=source_revision, core_revision=core_revision, package_version=version, target=f"debian{distro_version}-amd64", renderer="software/OpenGL; no Vulkan")
     (doc / "components.json").write_text(json.dumps(manifest, indent=2))
     write(root / "usr/bin/opencpn-chart-aware", "#!/bin/sh\nexec /usr/bin/python3 /usr/lib/opencpn-chart-aware/share/opencpn-chart-aware/preview.py \"$@\"\n", 0o755)
     write(root / "usr/bin/opencpn-chart-aware-replace", "#!/bin/sh\nexec /usr/bin/python3 /usr/lib/opencpn-chart-aware/share/opencpn-chart-aware/replace.py \"$@\"\n", 0o755)

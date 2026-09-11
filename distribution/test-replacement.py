@@ -4,6 +4,8 @@ import hashlib
 import json
 import os
 import pty
+import platform
+import re
 import select
 from pathlib import Path
 import subprocess
@@ -54,6 +56,19 @@ def confirm_replacement(args):
 def main(package):
     if os.geteuid() != 0 or not Path('/.dockerenv').exists():
         raise RuntimeError('Only run in a disposable root Docker container')
+    policy = subprocess.check_output(['apt-cache', 'policy', 'opencpn'], text=True)
+    candidate = re.search(r'Candidate: (\S+)', policy)
+    if platform.freedesktop_os_release().get('VERSION_ID') == '12' and (
+            not candidate or candidate[1] == '(none)'):
+        # Bookworm's standard archive has no stock OpenCPN package. Still test
+        # package reinstallation against the real profile from the GUI smoke.
+        config = Path('/home/previewtest/.local/share/opencpn-chart-aware/profile/opencpn.conf')
+        before = config.read_bytes()
+        run(['apt-get', 'install', '--reinstall', '-y', str(package)])
+        assert config.read_bytes() == before
+        print('PASS: preview reinstall preserves its existing user profile.')
+        print('SKIP: stock-package replacement/recovery; no OpenCPN candidate in Debian 12 archive.')
+        return
     run(['apt-get', 'install', '-y', '--no-install-recommends', 'opencpn'])
     run(['useradd', '--create-home', 'replacementtest'])
     home = Path('/home/replacementtest')

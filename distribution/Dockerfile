@@ -1,4 +1,5 @@
-FROM debian:trixie
+ARG DEBIAN_SUITE=trixie
+FROM debian:${DEBIAN_SUITE}
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     autoconf autoconf-archive automake binutils build-essential ca-certificates \
