@@ -58,7 +58,7 @@ def dependencies(root):
 def main(work):
     if subprocess.check_output(["dpkg", "--print-architecture"], text=True).strip() != "amd64":
         raise RuntimeError("Initial vendor runtime pins are amd64-only.")
-    version = os.environ.get("PREVIEW_VERSION", "5.14.0+chartaware.20260910.2")
+    version = os.environ.get("PREVIEW_VERSION", "5.14.0+chartaware.20260911.1")
     root = work / "deb-root"
     if root.exists():
         raise RuntimeError(f"Refusing to overwrite package staging: {root}")
