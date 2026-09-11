@@ -21,6 +21,11 @@ and a developer glutil-path lookup improvement; these are visible in the diff.
 
 ## Debian 12 and Debian 13 amd64
 
+The standard Debian 12 archive has no stock `opencpn` candidate. Qualification
+there tests isolated installation and profile-preserving reinstallation, and
+explicitly skips stock-package replacement/recovery. Debian 13 also exercises
+replacement and restoration using its archive's stock OpenCPN package.
+
 The installer workflow builds and qualifies both bookworm and trixie independently.
 To build Debian 12, add `--build-arg DEBIAN_SUITE=bookworm` to the Docker build,
 use a separate `bookworm` image tag and work directory, and set `OCPN_TARGET=bookworm`
