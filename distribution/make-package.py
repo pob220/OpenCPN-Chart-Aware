@@ -53,9 +53,16 @@ def dependencies(root):
             if not library or root in library.parents or library in checked:
                 continue
             checked.add(library)
-            owner = subprocess.run(["dpkg-query", "-S", str(library.resolve())], capture_output=True, text=True)
-            if owner.returncode:
-                owner = subprocess.run(["dpkg-query", "-S", str(library)], capture_output=True, text=True, check=True)
+            # Bookworm's dpkg database can record /lib while ldd resolves the
+            # same file through /usr/lib on merged-/usr systems.
+            candidates = {library, library.resolve()}
+            for candidate in tuple(candidates):
+                if str(candidate).startswith("/usr/"):
+                    alias = Path(str(candidate)[4:])
+                    if alias.exists() and alias.resolve() == library.resolve():
+                        candidates.add(alias)
+            owner = subprocess.run(["dpkg-query", "-S", *map(str, sorted(candidates))],
+                                   capture_output=True, text=True)
             owners = [line.split(": ", 1)[0].split(":", 1)[0]
                       for line in owner.stdout.splitlines()
                       if re.match(r"^[a-z0-9][a-z0-9+.-]*(?::[a-z0-9-]+)?: /", line)]
