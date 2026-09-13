@@ -1313,6 +1313,7 @@ TEST(Loopback, Exists) {
   EXPECT_TRUE(found);
 }
 TEST(Loopback, N0183) {
+  MakeLoopbackDriver();  // Each CTest case runs in a fresh process.
   Loopback0183App app;
   EXPECT_TRUE(s_result == "$PMCAG,900,3-D,L*5B");
   EXPECT_TRUE(s_bus == NavAddr::Bus::N0183);
@@ -1320,6 +1321,7 @@ TEST(Loopback, N0183) {
 }
 
 TEST(Loopback, N2000) {
+  MakeLoopbackDriver();  // Each CTest case runs in a fresh process.
   s_result = "";
   int_result0 = -1;
   Loopback2000App app;
@@ -1332,12 +1334,14 @@ TEST(Loopback, N2000) {
 }
 
 TEST(Loopback, BadN2000) {
+  MakeLoopbackDriver();  // Each CTest case runs in a fresh process.
   s_result = "";
   LoopbackBad2000App app;
   EXPECT_TRUE(s_result == "");
 }
 
 TEST(Loopback, SignalK) {
+  MakeLoopbackDriver();  // Each CTest case runs in a fresh process.
   s_result = "";
   int_result0 = -1;
   LoopbackSignalkApp app;

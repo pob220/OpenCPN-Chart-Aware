@@ -73,11 +73,13 @@ jobs:
             build-windows64/CMakeCache.txt
             build-windows64/CMakeFiles/CMakeConfigureLog.yaml
             build-windows64/Testing/
+            build-windows64/test/Testing/
             plugin-build-windows64/*/CMakeCache.txt
             plugin-build-windows64/*/CMakeFiles/CMakeConfigureLog.yaml
             plugin-build-windows64/**/Testing/
             plugin-build-windows64/*-overlays.json
             plugin-build-windows64/*-data-defaults.patch
+            plugin-build-windows64/*-native-fixes.patch
             windows64-runtime-evidence/
             cache-windows64/vcpkg/buildtrees/*/*.log
           retention-days: 14

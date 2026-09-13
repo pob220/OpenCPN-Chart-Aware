@@ -22,6 +22,23 @@ DLL_NAMES = {
     'offlinetides': 'offlinetides_pi.dll',
 }
 
+def native_source_fixes(name, source):
+    if name != 'climatology':
+        return
+    path = source / 'opencpn-libs/wxJSON/include/wx/json_defs.h'
+    before = path.read_text(encoding='utf-8')
+    needle = '#if !defined(snprintf) && defined(_MSC_VER)'
+    if before.count(needle) != 1:
+        raise RuntimeError('The legacy wxJSON snprintf compatibility guard changed')
+    # MSVC has standard snprintf since VS 2015. The old object-like macro
+    # also rewrites std::snprintf into the nonexistent std::_snprintf.
+    after = before.replace(needle, needle + ' && _MSC_VER < 1900')
+    path.write_text(after, encoding='utf-8')
+    relative = path.relative_to(source).as_posix()
+    diff = ''.join(difflib.unified_diff(before.splitlines(True), after.splitlines(True),
+                                      fromfile='a/' + relative, tofile='b/' + relative))
+    (BUILD / f'{name}-native-fixes.patch').write_text(diff, encoding='utf-8')
+
 def bundled_data_defaults(name, source):
     """Use shipped read-only data when the user has not selected private data."""
     if name == 'offlinetides':
@@ -103,6 +120,7 @@ def overlay_sources(name):
         changes.append({'file': 'cmake/PluginInstall.cmake',
                         'change': 'Honor the isolated staging prefix'})
     (BUILD / f'{name}-overlays.json').write_text(json.dumps(changes, indent=2) + '\n')
+    native_source_fixes(name, source)
     bundled_data_defaults(name, source)
     return source
 
@@ -135,6 +153,17 @@ def build_plugin(name):
                  '-DXGRIB_USE_BUNDLED_JASPER=ON', '-DBUNDLE_GENERATOR_RUNTIME=ON']
     if name == 'offlinetides':
         args += ['-DXTIDAL_STANDALONE_API=ON', '-DXTIDAL_BUILD_AUTHORING_TOOLS=OFF']
+    if name == 'celestial':
+        # Reuse the native static GoogleTest built for the core, with its
+        # matching headers, instead of adding a second SDK test library.
+        gtest = WORK / 'lib/Release/gtest.lib'
+        gtest_main = WORK / 'lib/Release/gtest_main.lib'
+        gtest_include = WORK / '_deps/googletest-src/googletest/include'
+        if not all(path.exists() for path in (gtest, gtest_main, gtest_include)):
+            raise RuntimeError('The native core GoogleTest build is missing')
+        args += ['-DGTEST_LIBRARY_RELEASE=' + str(gtest),
+                 '-DGTEST_MAIN_LIBRARY_RELEASE=' + str(gtest_main),
+                 '-DGTEST_INCLUDE_DIR=' + str(gtest_include)]
     run('cmake', '-S', source, '-B', work, *cmake_sdk_args(), *args)
     run('cmake', '--build', work, '--config', 'Release', '--parallel', '4')
     if tests:
@@ -174,6 +203,8 @@ def main():
     for path in BUILD.glob('*-overlays.json'):
         shutil.copy2(path, evidence)
     for path in BUILD.glob('*-data-defaults.patch'):
+        shutil.copy2(path, evidence)
+    for path in BUILD.glob('*-native-fixes.patch'):
         shutil.copy2(path, evidence)
     run(sys.executable, ROOT / 'distribution/windows64/verify_pe.py', STAGE)
 

@@ -22,6 +22,7 @@ def cmake_sdk_args():
     return ['-G', 'Visual Studio 17 2022', '-A', 'x64',
             '-DCMAKE_TOOLCHAIN_FILE=' + str(VCPKG / 'scripts/buildsystems/vcpkg.cmake'),
             '-DVCPKG_TARGET_TRIPLET=' + TRIPLET,
+            '-DVCPKG_MANIFEST_MODE=OFF',
             '-DVCPKG_OVERLAY_TRIPLETS=' + str(ROOT / 'distribution/windows64/triplets'),
             '-DwxWidgets_ROOT_DIR=' + str(WX), '-DwxWidgets_LIB_DIR=' + str(WX_LIB),
             '-DwxWidgets_CONFIGURATION=mswu',
