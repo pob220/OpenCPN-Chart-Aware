@@ -823,14 +823,14 @@ thread_exit:
 #if 1
 GARMIN_USB_Thread::GARMIN_USB_Thread(GarminProtocolHandler *parent,
                                      SendMsgFunc send_msg_func,
-                                     unsigned int device_handle,
+                                     wxIntPtr device_handle,
                                      size_t max_tx_size) {
   m_parent = parent;  // This thread's immediate "parent"
   m_send_msg_func = send_msg_func;
   m_max_tx_size = max_tx_size;
 
 #ifdef __WXMSW__
-  m_usb_handle = (HANDLE)(device_handle & 0xffff);
+  m_usb_handle = reinterpret_cast<HANDLE>(device_handle);
 #endif
 
   Create();

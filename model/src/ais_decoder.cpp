@@ -117,6 +117,12 @@ static int first_rx_ticks;
 static int rx_ticks;
 static double arpa_ref_hdg = NAN;
 
+// Selection stores the numeric MMSI as an opaque key, never dereferenced.
+// Use a pointer-sized intermediate on both Windows x86 and x64.
+static void* AisSelectionKey(wxIntPtr mmsi) {
+  return reinterpret_cast<void*>(mmsi);
+}
+
 static inline double GeodesicRadToDeg(double rads) {
   return rads * 180.0 / M_PI;
 }
@@ -1565,7 +1571,7 @@ bool AisDecoder::HandleN2K_129038(const N2000MsgPtr &n2k_msg) {
     pTargetData->LastPositionReportTicks = pTargetData->PositionReportTicks;
     pTargetData->PositionReportTicks = now.GetTicks();
 
-    pSelectAIS->DeleteSelectablePoint((void *)(long)mmsi, SELTYPE_AISTARGET);
+    pSelectAIS->DeleteSelectablePoint(AisSelectionKey(mmsi), SELTYPE_AISTARGET);
     CommitAISTarget(pTargetData, "", true, bnewtarget);
 
     touch_state.Notify();
@@ -1656,7 +1662,7 @@ bool AisDecoder::HandleN2K_129039(const N2000MsgPtr &n2k_msg) {
         AISTransceiverInformation ==
         tN2kAISTransceiverInformation::N2kaisown_information_not_broadcast;
 
-    pSelectAIS->DeleteSelectablePoint((void *)(long)mmsi, SELTYPE_AISTARGET);
+    pSelectAIS->DeleteSelectablePoint(AisSelectionKey(mmsi), SELTYPE_AISTARGET);
     CommitAISTarget(pTargetData, "", true, bnewtarget);
 
     touch_state.Notify();
@@ -1755,7 +1761,7 @@ bool AisDecoder::HandleN2K_129041(const N2000MsgPtr &n2k_msg) {
 
     // FIXME (dave) Populate more fiddly static data
 
-    pSelectAIS->DeleteSelectablePoint((void *)(long)mmsi, SELTYPE_AISTARGET);
+    pSelectAIS->DeleteSelectablePoint(AisSelectionKey(mmsi), SELTYPE_AISTARGET);
     CommitAISTarget(pTargetData, "", true, bnewtarget);
 
     touch_state.Notify();
@@ -1848,7 +1854,7 @@ bool AisDecoder::HandleN2K_129794(const N2000MsgPtr &n2k_msg) {
       }
     }
 
-    pSelectAIS->DeleteSelectablePoint((void *)(long)mmsi, SELTYPE_AISTARGET);
+    pSelectAIS->DeleteSelectablePoint(AisSelectionKey(mmsi), SELTYPE_AISTARGET);
     CommitAISTarget(pTargetData, "", true, bnewtarget);
 
     touch_state.Notify();
@@ -1892,7 +1898,7 @@ bool AisDecoder::HandleN2K_129809(const N2000MsgPtr &n2k_msg) {
     pTargetData->b_nameValid = true;
     pTargetData->MID = 124;  // Indicates a name from n2k
 
-    pSelectAIS->DeleteSelectablePoint((void *)(long)mmsi, SELTYPE_AISTARGET);
+    pSelectAIS->DeleteSelectablePoint(AisSelectionKey(mmsi), SELTYPE_AISTARGET);
     CommitAISTarget(pTargetData, "", true, bnewtarget);
 
     touch_state.Notify();
@@ -1950,7 +1956,7 @@ bool AisDecoder::HandleN2K_129810(const N2000MsgPtr &n2k_msg) {
     pTargetData->CallSign[sizeof(pTargetData->CallSign) - 1] = '\0';
     pTargetData->ShipType = (unsigned char)VesselType;
 
-    pSelectAIS->DeleteSelectablePoint((void *)(long)mmsi, SELTYPE_AISTARGET);
+    pSelectAIS->DeleteSelectablePoint(AisSelectionKey(mmsi), SELTYPE_AISTARGET);
     CommitAISTarget(pTargetData, "", true, bnewtarget);
 
     touch_state.Notify();
@@ -2005,7 +2011,7 @@ bool AisDecoder::HandleN2K_129793(const N2000MsgPtr &n2k_msg) {
 
     // FIXME (dave) Populate more fiddly static data
 
-    pSelectAIS->DeleteSelectablePoint((void *)(long)mmsi, SELTYPE_AISTARGET);
+    pSelectAIS->DeleteSelectablePoint(AisSelectionKey(mmsi), SELTYPE_AISTARGET);
     CommitAISTarget(pTargetData, "", true, bnewtarget);
 
     touch_state.Notify();
@@ -2177,7 +2183,7 @@ void AisDecoder::handleUpdate(const std::shared_ptr<AisTargetData> &pTargetData,
     long mmsi_long = pTargetData->MMSI;
     SelectItem *pSel =
         pSelectAIS->AddSelectablePoint(pTargetData->Lat, pTargetData->Lon,
-                                       (void *)mmsi_long, SELTYPE_AISTARGET);
+                                       AisSelectionKey(mmsi_long), SELTYPE_AISTARGET);
     pSel->SetUserData(pTargetData->MMSI);
   }
   UpdateOneCPA(pTargetData.get());
@@ -3188,7 +3194,7 @@ AisError AisDecoder::DecodeN0183(const wxString &str) {
 
     // Delete the stale AIS Target selectable point
     if (pStaleTarget)
-      pSelectAIS->DeleteSelectablePoint((void *)mmsi_long, SELTYPE_AISTARGET);
+      pSelectAIS->DeleteSelectablePoint(AisSelectionKey(mmsi_long), SELTYPE_AISTARGET);
 
     if (pTargetData) {
       if (gpsg_mmsi) {
@@ -3373,7 +3379,7 @@ void AisDecoder::CommitAISTarget(
       if (pTargetData->b_positionOnceValid) {
         long mmsi_long = pTargetData->MMSI;
         SelectItem *pSel = pSelectAIS->AddSelectablePoint(
-            pTargetData->Lat, pTargetData->Lon, (void *)mmsi_long,
+            pTargetData->Lat, pTargetData->Lon, AisSelectionKey(mmsi_long),
             SELTYPE_AISTARGET);
         pSel->SetUserData(pTargetData->MMSI);
       }
@@ -3399,7 +3405,7 @@ void AisDecoder::CommitAISTarget(
         if (pTargetData->b_positionOnceValid) {
           long mmsi_long = pTargetData->MMSI;
           SelectItem *pSel = pSelectAIS->AddSelectablePoint(
-              pTargetData->Lat, pTargetData->Lon, (void *)mmsi_long,
+              pTargetData->Lat, pTargetData->Lon, AisSelectionKey(mmsi_long),
               SELTYPE_AISTARGET);
           pSel->SetUserData(pTargetData->MMSI);
         }
@@ -3435,7 +3441,7 @@ void AisDecoder::getAISTarget(long mmsi,
 
   // Delete the stale AIS Target selectable point
   if (pStaleTarget)
-    pSelectAIS->DeleteSelectablePoint((void *)mmsi, SELTYPE_AISTARGET);
+    pSelectAIS->DeleteSelectablePoint(AisSelectionKey(mmsi), SELTYPE_AISTARGET);
 }
 
 std::shared_ptr<AisTargetData> AisDecoder::ProcessDSx(const wxString &str,
@@ -3706,11 +3712,11 @@ std::shared_ptr<AisTargetData> AisDecoder::ProcessDSx(const wxString &str,
 
       // Delete any stale Target selectable point
       if (pStaleTarget)
-        pSelectAIS->DeleteSelectablePoint((void *)mmsi_long, SELTYPE_AISTARGET);
+        pSelectAIS->DeleteSelectablePoint(AisSelectionKey(mmsi_long), SELTYPE_AISTARGET);
       //  And add the updated target
       SelectItem *pSel =
           pSelectAIS->AddSelectablePoint(pTargetData->Lat, pTargetData->Lon,
-                                         (void *)mmsi_long, SELTYPE_AISTARGET);
+                                         AisSelectionKey(mmsi_long), SELTYPE_AISTARGET);
       pSel->SetUserData(pTargetData->MMSI);
 
       //    Calculate CPA info for this target immediately
@@ -4248,7 +4254,7 @@ void AisDecoder::OnTimerAIS(wxTimerEvent &event) {
         plugin_msg.Notify(xtd, "");
 
         long mmsi_long = xtd->MMSI;
-        pSelectAIS->DeleteSelectablePoint((void *)mmsi_long, SELTYPE_AISTARGET);
+        pSelectAIS->DeleteSelectablePoint(AisSelectionKey(mmsi_long), SELTYPE_AISTARGET);
 
         //      If we have not seen a static report in 3 times the removal spec,
         //      then remove the target from all lists

@@ -16,9 +16,12 @@
 #ifdef _WIN32
 #include <basetsd.h>
 #ifdef _MSC_VER
-//typedef SSIZE_T ssize_t;
-// Nohal - We need to do this instead of the upstream SSIZE_T to have ssize_t compatible with wxWidgets
+// Match wxWidgets: signed pointer size on Windows x64, int on x86.
+#ifdef _WIN64
+typedef SSIZE_T ssize_t;
+#else
 typedef int ssize_t;
+#endif
 #endif
 #endif
 

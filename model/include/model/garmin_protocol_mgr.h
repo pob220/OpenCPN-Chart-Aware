@@ -267,7 +267,7 @@ private:
 class GARMIN_USB_Thread : public wxThread {
 public:
   GARMIN_USB_Thread(GarminProtocolHandler *parent, SendMsgFunc send_msg_func,
-                    unsigned int device_handle, size_t max_tx_size);
+                    wxIntPtr device_handle, size_t max_tx_size);
   ~GARMIN_USB_Thread(void);
   void *Entry();
 
