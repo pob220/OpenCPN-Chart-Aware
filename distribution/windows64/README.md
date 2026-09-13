@@ -13,6 +13,10 @@ x64 triplet. No legacy x86 support bundle is used in the enabled core paths.
 Legacy CrashRpt is disabled and the Preview notes disclose this. Pointer
 truncation warnings are errors in the core and plugin builds. MSVC runtime
 libraries are staged from the native compiler's redistributable directory.
+curl uses its native Windows Schannel backend. The SDK and staged runtime
+must each pass an HTTPS request with peer and hostname verification enabled;
+the check removes any inherited TLS-backend override. OpenSSL remains a
+separate dependency for the core components which use it directly.
 
 Run on a native Windows builder with Python 3.12, Git, CMake, 7-Zip, GNU gettext
 and the MSVC x64 tools environment:

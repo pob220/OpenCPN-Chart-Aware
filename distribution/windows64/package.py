@@ -15,7 +15,8 @@ def package():
     if (set(result['initialized_plugins']) != set(DLL_NAMES.values()) or
             not all(result.get(key) is True for key in (
                 'native_chart_safety_connection', 'bundled_tides_loaded',
-                'ordinary_profiles_unchanged', 'forbidden_profile_overrides_rejected'))):
+                'ordinary_profiles_unchanged', 'forbidden_profile_overrides_rejected',
+                'packaged_https_verified'))):
         raise RuntimeError('The complete Preview runtime gate has not passed')
     expected = [STAGE / 'opencpn.exe', STAGE / 'plugins/xgrib_pi/bin/environmental-grib.exe']
     expected.extend(STAGE / 'plugins' / name for name in DLL_NAMES.values())
@@ -59,7 +60,7 @@ Source: https://github.com/pob220/OpenCPN-Chart-Aware/tree/preview/windows-x64
 ''', encoding='utf-8')
     evidence = STAGE / 'build-evidence'
     evidence.mkdir(exist_ok=True)
-    for name in ('result.json', 'helper-capabilities.json', 'loaded-modules.json'):
+    for name in ('result.json', 'helper-capabilities.json', 'loaded-modules.json', 'https.json'):
         shutil.copy2(ROOT / 'windows64-runtime-evidence' / name, evidence)
     revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     (evidence / 'core-revision.txt').write_text(revision + '\n')

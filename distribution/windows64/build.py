@@ -59,10 +59,17 @@ def dependencies():
     pin = json.loads((ROOT / 'distribution/windows64/dependencies.json').read_text(encoding='utf-8'))
     run('git', 'checkout', '--detach', pin['vcpkg_revision'], cwd=VCPKG)
     run('cmd', '/c', VCPKG / 'bootstrap-vcpkg.bat', '-disableMetrics')
+    # Migrate the earlier multi-TLS SDK cache once. Classic vcpkg otherwise
+    # retains the previously requested OpenSSL feature when installing curl.
+    schannel_marker = CACHE / 'curl-schannel-default-v1'
+    if not schannel_marker.exists() and (INSTALLED / 'lib/libcurl.lib').exists():
+        run(VCPKG / 'vcpkg.exe', 'remove', 'curl:' + TRIPLET, '--recurse')
     run(VCPKG / 'vcpkg.exe', 'install', '--triplet', TRIPLET,
         '--overlay-triplets=' + str(ROOT / 'distribution/windows64/triplets'),
         '--overlay-ports=' + str(ROOT / 'distribution/windows64/ports'),
         *pin['ports'])
+    run(sys.executable, ROOT / 'distribution/windows64/verify_https.py', INSTALLED / 'bin')
+    schannel_marker.write_text('Verified Schannel with Windows certificate validation.\n')
     WX.mkdir(exist_ok=True)
     for name, sha in pin['wx_archives'].items():
         path = CACHE / name

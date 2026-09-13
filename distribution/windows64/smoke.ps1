@@ -5,6 +5,8 @@ if ($env:GITHUB_ACTIONS -ne 'true') {
     throw 'This test creates fixture profiles and is restricted to disposable GitHub runners.'
 }
 $stagePath = (Resolve-Path $Stage).Path
+$python = (Get-Command python).Source
+$httpsCheck = (Resolve-Path 'distribution/windows64/verify_https.py').Path
 $evidencePath = [IO.Path]::GetFullPath($Evidence)
 New-Item -ItemType Directory -Force $evidencePath | Out-Null
 $local = [Environment]::GetFolderPath('LocalApplicationData')
@@ -87,6 +89,8 @@ try {
     foreach ($name in @('ECCODES_DEFINITION_PATH', 'ECCODES_SAMPLES_PATH', 'PROJ_DATA', 'PROJ_LIB')) {
         Remove-Item "Env:$name" -ErrorAction SilentlyContinue
     }
+    & $python $httpsCheck $stagePath | Set-Content (Join-Path $evidencePath 'https.json')
+    if ($LASTEXITCODE -ne 0) { throw 'Packaged HTTPS failed native certificate verification.' }
     $helper = Join-Path $stagePath 'plugins\xgrib_pi\bin\environmental-grib.exe'
     & $helper capabilities | Set-Content (Join-Path $evidencePath 'helper-capabilities.json')
     if ($LASTEXITCODE -ne 0) { throw 'Packaged xGRIB helper could not start without the SDK.' }
@@ -158,6 +162,7 @@ try {
         bundled_tides_loaded = $true
         ordinary_profiles_unchanged = $true
         forbidden_profile_overrides_rejected = $true
+        packaged_https_verified = $true
         private_profile = $profile
         gui_mode = 'software rendering'
     } | ConvertTo-Json | Set-Content (Join-Path $evidencePath 'result.json')

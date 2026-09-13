@@ -2,7 +2,7 @@
   "vcpkg_revision": "a1cae005c39be7b18ba319fced856b68d7276271",
   "ports": [
     "bzip2",
-    "curl[openssl]",
+    "curl",
     "glew",
     "libarchive",
     "liblzma",
