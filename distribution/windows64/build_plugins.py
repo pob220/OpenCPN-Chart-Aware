@@ -30,6 +30,8 @@ def native_source_fixes(name, source):
              '#if !defined(snprintf) && defined(_MSC_VER) && _MSC_VER < 1900'),
             ('include/defs.h', '# if !defined(snprintf)',
              '# if !defined(snprintf) && _MSC_VER < 1900'),
+            ('opencpn-libs/zlib/CMakeLists.txt', 'if (WIN32)',
+             'if (WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 4)'),
         ]
     elif name == 'celestial':
         replacements = [
