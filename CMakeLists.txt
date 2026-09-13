@@ -652,6 +652,12 @@ if (OPENGL_FOUND AND CMAKE_HOST_WIN32 AND NOT OCPN_WINDOWS64_PREVIEW)
 elseif (OPENGL_FOUND AND NOT APPLE)
   find_package(GLEW REQUIRED)
   include_directories(${GLEW_INCLUDE_DIRS})
+  if (OCPN_WINDOWS64_PREVIEW)
+    # The legacy Windows sources include glew.h without its GL/ prefix.
+    foreach (_glew_include IN LISTS GLEW_INCLUDE_DIRS)
+      include_directories("${_glew_include}/GL")
+    endforeach ()
+  endif ()
   link_libraries(${GLEW_LIBRARIES})
 endif ()
 
@@ -1626,7 +1632,7 @@ find_program(ASCIIDOC_PROG NAMES asciidoc)
 
 add_custom_command(
   OUTPUT ${CMAKE_BINARY_DIR}/authors.stamp
-  COMMAND cmake -E touch  ${CMAKE_BINARY_DIR}/authors.stamp
+  COMMAND ${CMAKE_COMMAND} -E touch  ${CMAKE_BINARY_DIR}/authors.stamp
 )
 if (ASCIIDOC_PROG)
   add_custom_command(
@@ -2734,7 +2740,7 @@ if (APPLE)
                               /tmp/opencpn/bin/OpenCPN.app/Contents/Frameworks
   )
 
-  add_custom_target(pkg-tmp COMMAND cmake -E make_directory pkg_tmp)
+  add_custom_target(pkg-tmp COMMAND ${CMAKE_COMMAND} -E make_directory pkg_tmp)
 
   add_custom_target(
     component-pkg
@@ -2754,7 +2760,7 @@ if (APPLE)
   )
   add_dependencies(build-macos-pkg component-pkg)
 
-  add_custom_target(remove-tmp-pkg COMMAND cmake -E rm -f OpenCPN.app.pkg)
+  add_custom_target(remove-tmp-pkg COMMAND ${CMAKE_COMMAND} -E rm -f OpenCPN.app.pkg)
   add_dependencies(remove-tmp-pkg build-macos-pkg)
 
   add_custom_target(macos-pkg)
@@ -2816,7 +2822,7 @@ if (OCPN_BUILD_TEST)
   add_subdirectory(test)
   add_custom_target(
     run-tests
-    COMMAND cmake -P "${CMAKE_BINARY_DIR}/run_tests.cmake"
+    COMMAND ${CMAKE_COMMAND} -P "${CMAKE_BINARY_DIR}/run_tests.cmake"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/test
   )
   add_dependencies(run-tests tests)
@@ -2827,7 +2833,7 @@ if (OCPN_BUILD_TEST)
     add_dependencies(run-tests dbus_tests)
   endif ()
 else ()
-  add_custom_target(run-tests COMMAND cmake -E echo "No tests available")
+  add_custom_target(run-tests COMMAND ${CMAKE_COMMAND} -E echo "No tests available")
 endif ()
 
 if (QT_ANDROID)

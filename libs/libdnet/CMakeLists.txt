@@ -43,6 +43,10 @@ set(
   LIBDNET_PATCH
   ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in-Fix-wrong-return-type.patch
 )
+if (OCPN_WINDOWS64_PREVIEW)
+  list(APPEND CMAKE_ADDITIONAL_PARAMS -A x64
+    "-DCMAKE_C_FLAGS=/we4302 /we4311 /we4312")
+endif ()
 ExternalProject_Add(
   _libdnet EXCLUDE_FROM_ALL
   DOWNLOAD_COMMAND
@@ -62,7 +66,7 @@ ExternalProject_Add(
   SOURCE_DIR "${LIBDNET_SRC}"
   TEST_COMMAND ""
   INSTALL_COMMAND
-      cmake --build . --target install --config $<CONFIG>
+      ${CMAKE_COMMAND} --build . --target install --config $<CONFIG>
 )
 message(STATUS "Using patched libdnet at ${CMAKE_BINARY_DIR}/libdnet")
 

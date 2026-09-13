@@ -25,8 +25,8 @@ add_custom_command(
 add_custom_target(config_tests
   COMMENT "Installing test_config.h"
   DEPENDS ${CMAKE_BINARY_DIR}/test_config.h
-  COMMAND cmake -E cat ${CMAKE_BINARY_DIR}/test_config.h
-  COMMAND cmake -E
+  COMMAND ${CMAKE_COMMAND} -E cat ${CMAKE_BINARY_DIR}/test_config.h
+  COMMAND ${CMAKE_COMMAND} -E
       copy ${CMAKE_BINARY_DIR}/test_config.h ${CMAKE_BINARY_DIR}/include
 )
 
@@ -203,8 +203,8 @@ PATH=%PATH%\;${_cache_dir}\\\\wxWidgets-3.2.5\\\\lib\\\\vc14x_dll\")
 ")
   file(WRITE ${_script_path} ${_script})
   add_custom_target(win-path-setup
-    COMMAND cmake -P "${_script_path}"
-    COMMAND cmake -E echo "Creating ${_bat_path}"
+    COMMAND ${CMAKE_COMMAND} -P "${_script_path}"
+    COMMAND ${CMAKE_COMMAND} -E echo "Creating ${_bat_path}"
   )
 endif ()
 
