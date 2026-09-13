@@ -729,10 +729,10 @@ void s52plib::GenerateStateHash() {
     offset += sizeof(int);
   }
 
-  long p = (long)GetS52Utils()->GetDefaultFont(_("ChartTexts"), 0);
-  if (offset + sizeof(long) < sizeof(state_buffer)) {
-    memcpy(&state_buffer[offset], &p, sizeof(long));
-    offset += sizeof(long);
+  const auto *font = GetS52Utils()->GetDefaultFont(_("ChartTexts"), 0);
+  if (offset + sizeof(font) <= sizeof(state_buffer)) {
+    memcpy(&state_buffer[offset], &font, sizeof(font));
+    offset += sizeof(font);
   }
 
   m_state_hash = crc32buf(state_buffer, offset);

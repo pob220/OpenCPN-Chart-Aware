@@ -1,7 +1,7 @@
 #ifndef OCPN_WINDOWS64_PREVIEW_PATHS_H
 #define OCPN_WINDOWS64_PREVIEW_PATHS_H
 #ifdef OCPN_WINDOWS64_PREVIEW
-#include <windows.h>
+#include <wx/msw/wrapwin.h>
 #include <shlobj.h>
 #include <stdexcept>
 #include <wx/filename.h>
