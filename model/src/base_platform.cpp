@@ -688,7 +688,8 @@ bool BasePlatform::InitializeLogFile() {
   // create the opencpn "home" directory if we need to
   wxFileName wxHomeFiledir(GetHomeDir());
   if (true != wxHomeFiledir.DirExists(wxHomeFiledir.GetPath()))
-    if (!wxHomeFiledir.Mkdir(wxHomeFiledir.GetPath())) {
+    if (!wxHomeFiledir.Mkdir(wxHomeFiledir.GetPath(), wxS_DIR_DEFAULT,
+                            wxPATH_MKDIR_FULL)) {
       wxASSERT_MSG(false, "Cannot create opencpn home directory");
       return false;
     }
