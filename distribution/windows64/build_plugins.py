@@ -23,21 +23,55 @@ DLL_NAMES = {
 }
 
 def native_source_fixes(name, source):
-    if name != 'climatology':
+    if name == 'climatology':
+        replacements = [
+            ('opencpn-libs/wxJSON/include/wx/json_defs.h',
+             '#if !defined(snprintf) && defined(_MSC_VER)',
+             '#if !defined(snprintf) && defined(_MSC_VER) && _MSC_VER < 1900'),
+            ('include/defs.h', '# if !defined(snprintf)',
+             '# if !defined(snprintf) && _MSC_VER < 1900'),
+        ]
+    elif name == 'celestial':
+        replacements = [
+            ('test/lunar_ui_smoke_tests.cpp', '#include <wx/filename.h>',
+             '#include <wx/filename.h>\n#include <wx/fileconf.h>'),
+            ('src/Sight.h',
+             '#define isnan _isnan\n#define isinf(x) (!_finite(x) && !_isnan(x))\n\n'
+             '#define trunc(d) (((d) > 0) ? floor(d) : ceil(d))',
+             'using std::isnan;\nusing std::isinf;\nusing std::trunc;'),
+        ]
+    elif name == 'weather_routing':
+        zlib_dll = INSTALLED / 'bin/zlib1.dll'
+        if not zlib_dll.is_file():
+            raise RuntimeError('The native SDK zlib runtime is missing')
+        replacements = [
+            ('opencpn-libs/zlib/CMakeLists.txt', 'if (WIN32)',
+             'if (WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 4)'),
+            ('test/CMakeLists.txt',
+             '${WEATHER_ROUTING_SOURCE_DIR}/opencpn-libs/zlib/win/zlib1.dll',
+             zlib_dll.as_posix()),
+            ('test/CMakeLists.txt',
+             '# zlib1.lib is an import library. Keep its matching x86 DLL beside the\n'
+             '       # x86 test executable so GoogleTest discovery cannot select an',
+             '# Keep the native SDK zlib DLL beside the test executable\n'
+             '       # so GoogleTest discovery cannot select an'),
+        ]
+    else:
         return
-    path = source / 'opencpn-libs/wxJSON/include/wx/json_defs.h'
-    before = path.read_text(encoding='utf-8')
-    needle = '#if !defined(snprintf) && defined(_MSC_VER)'
-    if before.count(needle) != 1:
-        raise RuntimeError('The legacy wxJSON snprintf compatibility guard changed')
-    # MSVC has standard snprintf since VS 2015. The old object-like macro
-    # also rewrites std::snprintf into the nonexistent std::_snprintf.
-    after = before.replace(needle, needle + ' && _MSC_VER < 1900')
-    path.write_text(after, encoding='utf-8')
-    relative = path.relative_to(source).as_posix()
-    diff = ''.join(difflib.unified_diff(before.splitlines(True), after.splitlines(True),
-                                      fromfile='a/' + relative, tofile='b/' + relative))
-    (BUILD / f'{name}-native-fixes.patch').write_text(diff, encoding='utf-8')
+    originals = {}
+    for relative, needle, replacement in replacements:
+        path = source / relative
+        before = path.read_text(encoding='utf-8')
+        originals.setdefault(relative, before)
+        if before.count(needle) != 1:
+            raise RuntimeError(f'The native compatibility patch no longer matches {name}/{relative}')
+        path.write_text(before.replace(needle, replacement), encoding='utf-8')
+    diffs = []
+    for relative, before in originals.items():
+        after = (source / relative).read_text(encoding='utf-8')
+        diffs.extend(difflib.unified_diff(before.splitlines(True), after.splitlines(True),
+                                        fromfile='a/' + relative, tofile='b/' + relative))
+    (BUILD / f'{name}-native-fixes.patch').write_text(''.join(diffs), encoding='utf-8')
 
 def bundled_data_defaults(name, source):
     """Use shipped read-only data when the user has not selected private data."""

@@ -60,6 +60,9 @@ the newly compiled x64 `opencpn.lib`, honors the Preview staging prefix, and
 records the overlays. Celestial and OfflineTides use the bundled read-only data
 when private data have not been selected. These overlays do not add a new tide
 API or tide-adjusted under-keel-clearance policy.
+The xWeatherRouting overlay selects the SDK's x64 zlib and matching test DLL.
+Climatology's legacy `snprintf` compatibility macros are restricted to old MSVC.
+Celestial tests reuse the core's native GoogleTest libraries and headers.
 
 The ZIP includes the full-resolution GSHHG shoreline archive, all 52 Climatology
 2026.2 dataset files, the authenticated OfflineTides global runtime package,
@@ -73,9 +76,11 @@ and a core missing large-address-awareness. All 16 DLLs extracted from the pinne
 wxWidgets x64 runtime archive pass the PE32+/AMD64 checks. This is dependency
 verification, not an OpenCPN build or GUI result. The 52 Climatology files and
 full-resolution shoreline archive also pass their pinned checksum checks.
-The initial CI SDK build succeeded; core configuration exposed a missing
-gettext tool, now added to the workflow. Native compile/runtime findings are
-being resolved on the approved Preview branch.
+Windows CI run 34789186948 compiled and staged the native core and passed all
+85 registered core tests, including the chart-depth and chart-safety service
+tests. The generator's 6 tests and xGRIB's 19 tests passed. Polar 1.2.38.0 and
+OfflineTides compiled and installed. The remaining plugin build corrections
+and the complete runtime gate are still being qualified on the approved branch.
 
 Modern x64 Windows supplies up to 128 TB of user-mode virtual address space to a
 large-address-aware x64 process. A 32-bit process has 2 GB by default or up to
