@@ -24,7 +24,9 @@ def cmake_sdk_args():
             '-DVCPKG_TARGET_TRIPLET=' + TRIPLET,
             '-DVCPKG_OVERLAY_TRIPLETS=' + str(ROOT / 'distribution/windows64/triplets'),
             '-DwxWidgets_ROOT_DIR=' + str(WX), '-DwxWidgets_LIB_DIR=' + str(WX_LIB),
-            '-DwxWidgets_CONFIGURATION=mswu']
+            '-DwxWidgets_CONFIGURATION=mswu',
+            '-DCMAKE_CXX_FLAGS=/we4302 /we4311 /we4312',
+            '-DCMAKE_C_FLAGS=/we4302 /we4311 /we4312']
 
 def runtime_environment():
     os.environ['PATH'] = str(WX_LIB) + os.pathsep + str(INSTALLED / 'bin') + os.pathsep + os.environ['PATH']
@@ -39,15 +41,23 @@ def run(*args, cwd=ROOT):
 def download(url, path, sha256):
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists():
-        urllib.request.urlretrieve(url, path)
-    if hashlib.sha256(path.read_bytes()).hexdigest() != sha256:
+        partial = path.with_suffix(path.suffix + '.part')
+        urllib.request.urlretrieve(url, partial)
+        with partial.open('rb') as stream:
+            actual = hashlib.file_digest(stream, 'sha256').hexdigest()
+        if actual != sha256:
+            raise RuntimeError(f'Checksum mismatch: {partial}')
+        partial.replace(path)
+    with path.open('rb') as stream:
+        actual = hashlib.file_digest(stream, 'sha256').hexdigest()
+    if actual != sha256:
         raise RuntimeError(f'Checksum mismatch: {path}')
 
 def dependencies():
     CACHE.mkdir(exist_ok=True)
     if not (VCPKG / '.git').exists():
         run('git', 'clone', 'https://github.com/microsoft/vcpkg.git', VCPKG)
-    pin = json.loads((ROOT / 'distribution/windows64/dependencies.json').read_text())
+    pin = json.loads((ROOT / 'distribution/windows64/dependencies.json').read_text(encoding='utf-8'))
     run('git', 'checkout', '--detach', pin['vcpkg_revision'], cwd=VCPKG)
     run('cmd', '/c', VCPKG / 'bootstrap-vcpkg.bat', '-disableMetrics')
     run(VCPKG / 'vcpkg.exe', 'install', '--triplet', TRIPLET,

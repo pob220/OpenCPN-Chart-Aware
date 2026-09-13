@@ -31,7 +31,7 @@ def fetch(item):
 
 if __name__ == '__main__':
     INPUTS.mkdir(exist_ok=True)
-    pins = json.loads((ROOT / 'distribution/windows64/components-candidate.json').read_text())
+    pins = json.loads((ROOT / 'distribution/windows64/components-candidate.json').read_text(encoding='utf-8'))
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
         for name in pool.map(fetch, pins['plugins'].items()):
             print('Pinned source ready:', name, flush=True)

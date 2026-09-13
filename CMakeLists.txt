@@ -77,6 +77,8 @@ if(OCPN_WINDOWS64_PREVIEW)
     message(FATAL_ERROR "Windows64 Preview requires an MSVC x64 toolchain")
   endif()
   add_compile_definitions(OCPN_WINDOWS64_PREVIEW=1)
+  # Windows keeps long at 32 bits on x64. Do not ship truncated pointers.
+  add_compile_options(/we4302 /we4311 /we4312)
   add_link_options(/LARGEADDRESSAWARE)
 endif()
 

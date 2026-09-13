@@ -31,3 +31,5 @@ __pycache__/
 
 /inputs-windows64/
 /plugin-build-windows64/
+/artifacts-windows64/
+/windows64-runtime-evidence/

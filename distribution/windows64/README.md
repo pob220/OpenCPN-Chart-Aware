@@ -1,62 +1,77 @@
 # Windows x64 Preview build
 
-Status: initial source implementation, awaiting a native Windows compiler run.
-This directory does not yet produce the complete tester installer.
+Status: Windows CI is qualifying the native core and complete bundle recipe.
+No complete Windows Preview artifact has passed its runtime gate yet.
 
 Source branch: `preview/windows-x64`, based on the focused OpenCPN 5.14
 chart-aware distribution at `e356754`. The ordinary working installation is not
 used as a build or installation destination.
 
-The first build uses Visual Studio 2022 x64, wxWidgets 3.2.8 x64 (SHA-256-pinned
+The build uses Visual Studio 2022 x64, wxWidgets 3.2.8 x64 (SHA-256-pinned
 upstream SDK archives), and a pinned vcpkg source revision with a release-only
 x64 triplet. No legacy x86 support bundle is used in the enabled core paths.
-Optional legacy CrashRpt is disabled for this initial compiler milestone; this
-must be listed in Preview release notes if retained.
+Legacy CrashRpt is disabled and the Preview notes disclose this. Pointer
+truncation warnings are errors in the core and plugin builds. MSVC runtime
+libraries are staged from the native compiler's redistributable directory.
 
-Run on a native Windows builder with Python 3.12, Git, CMake, 7-Zip and the
-MSVC x64 tools environment:
+Run on a native Windows builder with Python 3.12, Git, CMake, 7-Zip, GNU gettext
+and the MSVC x64 tools environment:
 
 ```
 python distribution/windows64/build.py dependencies
 python distribution/windows64/build.py core
+python distribution/windows64/fetch_plugins.py
+python distribution/windows64/build_plugins.py
+python distribution/windows64/stage_data.py
 ```
 
-The workflow only creates internal build artifacts. It does not publish a
-release or upload plugins to a catalogue. A complete six-plugin bundle and
-installer remain required before a tester release.
+The workflow runs `smoke.ps1` on a disposable Windows runner, then `package.py`
+to create an extract-and-run Preview ZIP. It does not publish a GitHub release
+or upload plugins to a catalogue. The package gate requires all six plugins,
+the x64 generator, verified datasets, the chart-safety core connection, and
+unchanged ordinary-profile sentinel files. The smoke test checks actual loaded
+modules with the development SDK removed from PATH and retains a screenshot.
+It exercises software rendering; this does not qualify real graphics drivers,
+navigation devices, or routing against real charts.
 
 The Preview core uses `%LOCALAPPDATA%\OpenCPN-64bit-Preview\profile` through
 Windows' known-folder API. Its wxStandardPaths user/config paths and managed
 plugin location are redirected into that profile. Imported legacy plugin path
 overrides are ignored. `--configdir` and portable mode are rejected by this
 Preview build so ordinary OpenCPN state cannot be selected through those flags.
-The title shows `64-bit Preview`. These source changes still need Windows
-runtime qualification, including write tracing and coexistence checks.
+The title shows `64-bit Preview`. Runtime qualification is pending. Sentinel
+checks cover the normal roaming, local, and shared OpenCPN profile folders;
+broader filesystem write tracing and simultaneous real-installation testing
+remain useful tester checks.
 
 `components-candidate.json` pins six source candidates, not qualified binaries.
-Polar's candidate is the existing 1.2.38.0 distribution source; establish the
-intended updated Polars source before freezing the release. OfflineTides uses
+Polar 1.2.38.0 is explicitly confirmed by the user. OfflineTides uses
 the later published alpha3 source, which already has Windows x86 build history.
 The modified o-charts provider/runtime needs separate Windows x64 investigation
 for licensed-chart support.
 
-Next required work after the first compiler run:
+`build_plugins.py` makes disposable copies of the pinned inputs with their own
+Git metadata. It replaces the selected API's legacy x86 import library with
+the newly compiled x64 `opencpn.lib`, honors the Preview staging prefix, and
+records the overlays. Celestial and OfflineTides use the bundled read-only data
+when private data have not been selected. These overlays do not add a new tide
+API or tide-adjusted under-keel-clearance policy.
 
-1. Resolve compiler/linker findings and inspect actual core exports and imports.
-2. Build all six plugins against the same x64 core import library and wxWidgets
-   SDK; replace bundled x86 API import libraries in their isolated build sources.
-3. Stage xGRIB's generator and dependencies, all required datasets and licences,
-   and verify each loaded/shipped native runtime image as AMD64.
-4. Add the isolated per-user Preview installer, clean-machine dependency and
-   plugin initialization tests, complete-stack chart-routing tests, and upgrade/
-   uninstall/coexistence qualification. Keep normal OpenCPN state untouched.
-5. Publish a tester candidate only after the complete bundle passes its gates.
+The ZIP includes the full-resolution GSHHG shoreline archive, all 52 Climatology
+2026.2 dataset files, the authenticated OfflineTides global runtime package,
+DE440s, lunar orientation and LOLA eclipse data. Source revisions, dataset
+checksums and licences accompany the package. No ordinary profile is imported.
+Plugins retain the usual enable/disable controls in Options.
 
 Local checks completed on 13 September 2026: eight architecture-gate tests pass,
 covering x86/ARM64 rejection, a nested wrong-architecture DLL, malformed images,
 and a core missing large-address-awareness. All 16 DLLs extracted from the pinned
 wxWidgets x64 runtime archive pass the PE32+/AMD64 checks. This is dependency
-verification, not an OpenCPN build or GUI result.
+verification, not an OpenCPN build or GUI result. The 52 Climatology files and
+full-resolution shoreline archive also pass their pinned checksum checks.
+The initial CI SDK build succeeded; core configuration exposed a missing
+gettext tool, now added to the workflow. Native compile/runtime findings are
+being resolved on the approved Preview branch.
 
 Modern x64 Windows supplies up to 128 TB of user-mode virtual address space to a
 large-address-aware x64 process. A 32-bit process has 2 GB by default or up to

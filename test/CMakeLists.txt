@@ -35,8 +35,13 @@ if (MSVC)
   target_link_libraries(win32_libs
     INTERFACE
       setupapi.lib psapi.lib
-      ${CMAKE_SOURCE_DIR}/cache/buildwin/iphlpapi.lib
   )
+  if (OCPN_WINDOWS64_PREVIEW)
+    target_link_libraries(win32_libs INTERFACE iphlpapi.lib)
+  else ()
+    target_link_libraries(win32_libs INTERFACE
+      ${CMAKE_SOURCE_DIR}/cache/buildwin/iphlpapi.lib)
+  endif ()
 endif ()
 
 set(MODEL_SRC_DIR ${CMAKE_SOURCE_DIR}/model/src)

@@ -201,6 +201,12 @@ wxString AbstractPlatform::NormalizePath(const wxString& full_path) {
 }
 
 wxString& AbstractPlatform::GetHomeDir() {
+#ifdef OCPN_WINDOWS64_PREVIEW
+  // Also protect console/model callers which do not create GUI app traits.
+  m_homeDir = Windows64PreviewProfile();
+  appendOSDirSlash(&m_homeDir);
+  return m_homeDir;
+#endif
   if (m_homeDir.IsEmpty()) {
     //      Establish a "home" location
     wxStandardPaths& std_path = GetStdPaths();

@@ -34,6 +34,14 @@ jobs:
           restore-keys: windows64-sdk-v1-
       - name: Test binary architecture gate
         run: python -m unittest discover -s distribution/windows64 -p "test_*.py" -v
+      - name: Check runtime-test PowerShell syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [Management.Automation.Language.Parser]::ParseFile(
+            "$pwd/distribution/windows64/smoke.ps1", [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) { throw ($errors | Out-String) }
       - name: Build pinned x64 SDK
         run: python distribution/windows64/build.py dependencies
       - uses: actions/cache/save@v4
@@ -43,6 +51,15 @@ jobs:
           key: windows64-sdk-v1-${{ hashFiles('distribution/windows64/dependencies.json', 'distribution/windows64/triplets/*', 'distribution/windows64/ports/**') }}
       - name: Build and test core
         run: python distribution/windows64/build.py core
+      - name: Fetch pinned plugin sources
+        run: python distribution/windows64/fetch_plugins.py
+      - name: Build and test all six native plugins
+        run: python distribution/windows64/build_plugins.py
+      - name: Stage and verify operational data
+        run: python distribution/windows64/stage_data.py
+      - name: Exercise the isolated complete runtime
+        shell: pwsh
+        run: ./distribution/windows64/smoke.ps1
       - name: Retain build evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -52,11 +69,19 @@ jobs:
             build-windows64/CMakeCache.txt
             build-windows64/CMakeFiles/CMakeConfigureLog.yaml
             build-windows64/Testing/
+            plugin-build-windows64/*/CMakeCache.txt
+            plugin-build-windows64/*/CMakeFiles/CMakeConfigureLog.yaml
+            plugin-build-windows64/**/Testing/
+            plugin-build-windows64/*-overlays.json
+            plugin-build-windows64/*-data-defaults.patch
+            windows64-runtime-evidence/
             cache-windows64/vcpkg/buildtrees/*/*.log
           retention-days: 14
-      - name: Retain internal core candidate
+      - name: Create Preview ZIP
+        run: python distribution/windows64/package.py
+      - name: Retain complete Preview candidate
         uses: actions/upload-artifact@v4
         with:
-          name: windows64-core-internal
-          path: stage-windows64/
+          name: OpenCPN-Windows-x64-Preview
+          path: artifacts-windows64/*
           retention-days: 14
