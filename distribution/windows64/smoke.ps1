@@ -90,6 +90,11 @@ try {
     $helper = Join-Path $stagePath 'plugins\xgrib_pi\bin\environmental-grib.exe'
     & $helper capabilities | Set-Content (Join-Path $evidencePath 'helper-capabilities.json')
     if ($LASTEXITCODE -ne 0) { throw 'Packaged xGRIB helper could not start without the SDK.' }
+    $abi = & (Join-Path $stagePath 'opencpn-cmd.exe') print-abi
+    if ($LASTEXITCODE -ne 0 -or ([string]$abi).Trim() -ne 'msvc-wx32-x64:10') {
+        throw "The packaged console tool did not report the x64 Preview ABI: $abi"
+    }
+    $abi | Set-Content (Join-Path $evidencePath 'console-abi.txt')
     foreach ($override in @(@{name='portable'; argument='-p'},
                             @{name='configdir'; argument=('--configdir "' + $normalPaths[0] + '"')})) {
         $stderr = Join-Path $evidencePath ($override.name + '-rejection.txt')

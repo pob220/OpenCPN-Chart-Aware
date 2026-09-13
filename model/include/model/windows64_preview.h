@@ -15,5 +15,13 @@ inline wxString Windows64PreviewProfile() {
     throw std::runtime_error("Cannot locate Windows Preview application data");
   return wxString(folder) + "\\OpenCPN-64bit-Preview\\profile";
 }
+
+class Windows64PreviewPaths : public wxStandardPaths {
+public:
+  wxString GetUserDataDir() const override { return Windows64PreviewProfile(); }
+  wxString GetUserLocalDataDir() const override { return Windows64PreviewProfile(); }
+  wxString GetConfigDir() const override { return Windows64PreviewProfile(); }
+  wxString GetUserConfigDir() const override { return Windows64PreviewProfile(); }
+};
 #endif
 #endif

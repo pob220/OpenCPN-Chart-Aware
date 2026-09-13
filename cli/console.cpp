@@ -51,6 +51,7 @@
 #endif
 
 #include <wx/app.h>
+#include <wx/apptrait.h>
 #include <wx/bitmap.h>
 #include <wx/cmdline.h>
 #include <wx/dynlib.h>
@@ -62,6 +63,7 @@
 #include "model/ais_state_vars.h"
 #include "model/catalog_handler.h"
 #include "model/cli_platform.h"
+#include "model/windows64_preview.h"
 #include "model/comm_appmsg_bus.h"
 #include "model/comm_driver.h"
 #include "model/comm_navmsg_bus.h"
@@ -152,8 +154,20 @@ wxDEFINE_EVENT(EVT_BAR, wxCommandEvent);
 
 using namespace std;
 
+#ifdef OCPN_WINDOWS64_PREVIEW
+class PreviewConsoleTraits : public wxConsoleAppTraits {
+public:
+  wxStandardPaths& GetStandardPaths() override { return m_paths; }
+private:
+  Windows64PreviewPaths m_paths;
+};
+#endif
+
 class CliApp : public wxAppConsole {
 public:
+#ifdef OCPN_WINDOWS64_PREVIEW
+  wxAppTraits* CreateTraits() override { return new PreviewConsoleTraits; }
+#endif
   CliApp() : wxAppConsole() {
     CheckBuildOptions(WX_BUILD_OPTIONS_SIGNATURE, "program");
     SetAppName("opencpn");
@@ -172,6 +186,12 @@ public:
     wxLog::SetTimestamp("");
     wxLog::SetLogLevel(wxLOG_Warning);
     g_BasePlatform = new BasePlatform();
+#ifdef OCPN_WINDOWS64_PREVIEW
+    const auto profile = Windows64PreviewProfile();
+    if (!wxFileName::DirExists(profile) &&
+        !wxFileName::Mkdir(profile, wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL))
+      throw std::runtime_error("Cannot create Windows x64 Preview profile");
+#endif
     auto config_file = g_BasePlatform->GetConfigFileName();
     InitBaseConfig(new wxFileConfig("", "", config_file));
     pSelect = new Select();
