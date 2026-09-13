@@ -28,3 +28,6 @@ tags
 /cache-windows64/
 /stage-windows64/
 __pycache__/
+
+/inputs-windows64/
+/plugin-build-windows64/

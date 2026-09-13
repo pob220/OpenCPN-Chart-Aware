@@ -16,6 +16,21 @@ TRIPLET = 'x64-windows-release'
 WX = CACHE / 'wxWidgets-3.2.8'
 WX_LIB = WX / 'lib/vc14x_x64_dll'
 STAGE = ROOT / 'stage-windows64'
+INSTALLED = VCPKG / 'installed' / TRIPLET
+
+def cmake_sdk_args():
+    return ['-G', 'Visual Studio 17 2022', '-A', 'x64',
+            '-DCMAKE_TOOLCHAIN_FILE=' + str(VCPKG / 'scripts/buildsystems/vcpkg.cmake'),
+            '-DVCPKG_TARGET_TRIPLET=' + TRIPLET,
+            '-DVCPKG_OVERLAY_TRIPLETS=' + str(ROOT / 'distribution/windows64/triplets'),
+            '-DwxWidgets_ROOT_DIR=' + str(WX), '-DwxWidgets_LIB_DIR=' + str(WX_LIB),
+            '-DwxWidgets_CONFIGURATION=mswu']
+
+def runtime_environment():
+    os.environ['PATH'] = str(WX_LIB) + os.pathsep + str(INSTALLED / 'bin') + os.pathsep + os.environ['PATH']
+    os.environ['ECCODES_DEFINITION_PATH'] = str(INSTALLED / 'share/eccodes/definitions')
+    os.environ['ECCODES_SAMPLES_PATH'] = str(INSTALLED / 'share/eccodes/samples')
+    os.environ['PROJ_DATA'] = str(INSTALLED / 'share/proj')
 
 def run(*args, cwd=ROOT):
     print('+', ' '.join(map(str, args)), flush=True)
@@ -37,6 +52,7 @@ def dependencies():
     run('cmd', '/c', VCPKG / 'bootstrap-vcpkg.bat', '-disableMetrics')
     run(VCPKG / 'vcpkg.exe', 'install', '--triplet', TRIPLET,
         '--overlay-triplets=' + str(ROOT / 'distribution/windows64/triplets'),
+        '--overlay-ports=' + str(ROOT / 'distribution/windows64/ports'),
         *pin['ports'])
     WX.mkdir(exist_ok=True)
     for name, sha in pin['wx_archives'].items():
@@ -45,23 +61,18 @@ def dependencies():
         run('7z', 'x', '-y', '-o' + str(WX), path)
 
 def build_core():
-    installed = VCPKG / 'installed' / TRIPLET
-    os.environ['PATH'] = str(WX_LIB) + os.pathsep + str(installed / 'bin') + os.pathsep + os.environ['PATH']
-    run('cmake', '-S', ROOT, '-B', WORK, '-G', 'Visual Studio 17 2022', '-A', 'x64',
-        '-DCMAKE_TOOLCHAIN_FILE=' + str(VCPKG / 'scripts/buildsystems/vcpkg.cmake'),
-        '-DVCPKG_TARGET_TRIPLET=' + TRIPLET,
-        '-DVCPKG_OVERLAY_TRIPLETS=' + str(ROOT / 'distribution/windows64/triplets'),
+    runtime_environment()
+    run('cmake', '-S', ROOT, '-B', WORK, *cmake_sdk_args(),
         '-DOCPN_WINDOWS64_PREVIEW=ON', '-DOCPN_TARGET_TUPLE=msvc-wx32-x64;10;x86_64',
-        '-DwxWidgets_ROOT_DIR=' + str(WX), '-DwxWidgets_LIB_DIR=' + str(WX_LIB),
-        '-DwxWidgets_CONFIGURATION=mswu', '-DOCPN_USE_CRASHREPORT=OFF',
+        '-DOCPN_USE_CRASHREPORT=OFF',
         '-DOCPN_CI_BUILD=ON', '-DOCPN_BUILD_TEST=ON', '-DOCPN_BUNDLE_WXDLLS=ON',
         '-DOCPN_BUNDLE_VCDLLS=OFF', '-DBUNDLE_LIBARCHIVEDLLS=OFF',
-        '-DOCPN_BUNDLE_DOCS=OFF', '-DOCPN_BUNDLE_GSHHS=OFF',
+        '-DOCPN_BUNDLE_DOCS=OFF', '-DOCPN_BUNDLE_GSHHS=ON',
         '-DCMAKE_INSTALL_PREFIX=' + str(STAGE), '-DOCPN_VERBOSE=OFF')
     run('cmake', '--build', WORK, '--config', 'Release', '--parallel', '4')
     run('ctest', '--test-dir', WORK, '-C', 'Release', '--output-on-failure', '--timeout', '120')
     run('cmake', '--install', WORK, '--config', 'Release')
-    for dll in (installed / 'bin').glob('*.dll'):
+    for dll in (INSTALLED / 'bin').glob('*.dll'):
         shutil.copy2(dll, STAGE)
     run(sys.executable, ROOT / 'distribution/windows64/verify_pe.py', STAGE)
 

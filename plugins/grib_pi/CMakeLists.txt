@@ -206,7 +206,10 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang|AppleClang")
 endif ()
 
 if (WIN32)
-  if (MSVC)
+  if (OCPN_WINDOWS64_PREVIEW)
+    find_package(ZLIB REQUIRED)
+    target_link_libraries(${PACKAGE_NAME} PRIVATE ZLIB::ZLIB GLU_static)
+  elseif (MSVC)
     target_link_libraries(
       ${PACKAGE_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/cache/buildwin/zlib1.lib"
                               "GLU_static"
@@ -220,7 +223,7 @@ if (WIN32)
               # "-L${wxWidgets_ROOT_DIR}/lib -lwxzlib-2.8"
               "-lz"
     )
-  endif (MSVC)
+  endif ()
 
   target_link_libraries(${PACKAGE_NAME} PRIVATE LIB_BZIP)
   add_dependencies(${PACKAGE_NAME} ${PARENT})

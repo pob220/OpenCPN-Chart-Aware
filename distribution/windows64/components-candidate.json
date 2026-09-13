@@ -21,7 +21,7 @@
       "repository": "https://github.com/rgleason/polar_pi.git",
       "revision": "10e82348848c6fc91e9b46fa1c22f86cfd9cf174",
       "version": "1.2.38.0",
-      "status": "Existing distribution/source candidate; verify this is the intended updated Polars build before release."
+      "status": "Polar 1.2.38.0 confirmed by the user for this Preview bundle."
     },
     "celestial": {
       "repository": "https://github.com/pob220/celestial_navigation_pi.git",

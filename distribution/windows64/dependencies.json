@@ -1,6 +1,23 @@
 {
   "vcpkg_revision": "a1cae005c39be7b18ba319fced856b68d7276271",
-  "ports": ["bzip2", "curl[openssl]", "glew", "libarchive", "liblzma", "openssl", "zlib", "zstd", "jsoncpp", "libsodium"],
+  "ports": [
+    "bzip2",
+    "curl[openssl]",
+    "glew",
+    "libarchive",
+    "liblzma",
+    "openssl",
+    "zlib",
+    "zstd",
+    "jsoncpp",
+    "libsodium",
+    "blosc",
+    "eccodes",
+    "libzip",
+    "netcdf-c",
+    "proj",
+    "qhull"
+  ],
   "wx_archives": {
     "wxMSW-3.2.8_vc14x_x64_Dev.7z": "7eccb9d56902b43bc64693490b59c02a433cca68547b18fdc5d821a07e6883a5",
     "wxMSW-3.2.8_vc14x_x64_ReleaseDLL.7z": "fbc0ac9416344021650fcac210646984a15acfd4f402772282459c7e090dc922",

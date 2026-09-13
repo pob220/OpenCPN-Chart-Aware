@@ -19,11 +19,18 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
+      - name: Install translation tools
+        shell: pwsh
+        run: |
+          choco install gettext --version 1.0.0.20260310 -y --no-progress
+          if ($LASTEXITCODE -ne 0) { throw "gettext installation failed" }
+          $machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+          $machinePath.Split(';') | Where-Object { $_ } | Add-Content $env:GITHUB_PATH
       - uses: actions/cache/restore@v4
         id: sdk-cache
         with:
           path: cache-windows64
-          key: windows64-sdk-v1-${{ hashFiles('distribution/windows64/dependencies.json', 'distribution/windows64/triplets/*') }}
+          key: windows64-sdk-v1-${{ hashFiles('distribution/windows64/dependencies.json', 'distribution/windows64/triplets/*', 'distribution/windows64/ports/**') }}
           restore-keys: windows64-sdk-v1-
       - name: Test binary architecture gate
         run: python -m unittest discover -s distribution/windows64 -p "test_*.py" -v
@@ -33,7 +40,7 @@ jobs:
         if: steps.sdk-cache.outputs.cache-hit != 'true'
         with:
           path: cache-windows64
-          key: windows64-sdk-v1-${{ hashFiles('distribution/windows64/dependencies.json', 'distribution/windows64/triplets/*') }}
+          key: windows64-sdk-v1-${{ hashFiles('distribution/windows64/dependencies.json', 'distribution/windows64/triplets/*', 'distribution/windows64/ports/**') }}
       - name: Build and test core
         run: python distribution/windows64/build.py core
       - name: Retain build evidence
