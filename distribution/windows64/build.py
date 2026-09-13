@@ -25,8 +25,7 @@ def cmake_sdk_args():
             '-DVCPKG_OVERLAY_TRIPLETS=' + str(ROOT / 'distribution/windows64/triplets'),
             '-DwxWidgets_ROOT_DIR=' + str(WX), '-DwxWidgets_LIB_DIR=' + str(WX_LIB),
             '-DwxWidgets_CONFIGURATION=mswu',
-            '-DCMAKE_CXX_FLAGS=/we4302 /we4311 /we4312',
-            '-DCMAKE_C_FLAGS=/we4302 /we4311 /we4312']
+            '-DCMAKE_PROJECT_INCLUDE=' + str(ROOT / 'distribution/windows64/native-options.cmake')]
 
 def runtime_environment():
     os.environ['PATH'] = str(WX_LIB) + os.pathsep + str(INSTALLED / 'bin') + os.pathsep + os.environ['PATH']

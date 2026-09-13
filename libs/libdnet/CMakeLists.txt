@@ -44,8 +44,9 @@ set(
   ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in-Fix-wrong-return-type.patch
 )
 if (OCPN_WINDOWS64_PREVIEW)
-  list(APPEND CMAKE_ADDITIONAL_PARAMS -A x64
-    "-DCMAKE_C_FLAGS=/we4302 /we4311 /we4312")
+  # ExternalProject already forwards the parent generator's x64 platform.
+  list(APPEND CMAKE_ADDITIONAL_PARAMS
+    "-DCMAKE_PROJECT_INCLUDE=${CMAKE_SOURCE_DIR}/distribution/windows64/native-options.cmake")
 endif ()
 ExternalProject_Add(
   _libdnet EXCLUDE_FROM_ALL
