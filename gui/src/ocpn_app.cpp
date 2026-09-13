@@ -100,6 +100,7 @@
 #include "o_sound/o_sound.h"
 
 #include "model/ais_decoder.h"
+#include "model/windows64_preview.h"
 #include "model/ais_state_vars.h"
 #include "model/certificates.h"
 #include "model/cmdline.h"
@@ -608,6 +609,18 @@ bool MyApp::OnCmdLineParsed(wxCmdLineParser &parser) {
   wxString plugin;
 
   g_unit_test_2 = parser.Found("unit_test_2");
+#ifdef OCPN_WINDOWS64_PREVIEW
+  if (parser.Found("p") || parser.Found("configdir")) {
+    std::cerr << "The Windows x64 Preview always uses its separate profile.\n";
+    return false;
+  }
+  const wxString preview_profile = Windows64PreviewProfile();
+  if (!wxDirExists(preview_profile) &&
+      !wxFileName::Mkdir(preview_profile, wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL)) {
+    std::cerr << "Cannot create Windows x64 Preview profile.\n";
+    return false;
+  }
+#endif
   g_bportable = parser.Found("p");
   g_start_fullscreen = parser.Found("fullscreen");
   g_bdisable_opengl = parser.Found("no_opengl");
@@ -708,7 +721,7 @@ int MyApp::OnRun() {
   return wxAppConsole::OnRun();
 }
 
-#if defined(__linux__) && !defined(__ANDROID__)
+#if (defined(__linux__) && !defined(__ANDROID__)) || defined(OCPN_WINDOWS64_PREVIEW)
 namespace {
 // Plugins also call wxStandardPaths directly. --configdir alone does not
 // isolate their generated GRIBs, catalog metadata or crash/load stamps.
@@ -717,6 +730,10 @@ public:
   explicit ChartAwarePaths(const wxString& profile) : m_profile(profile) {}
   wxString GetUserDataDir() const override { return m_profile; }
   wxString GetUserLocalDataDir() const override { return m_profile; }
+#ifdef OCPN_WINDOWS64_PREVIEW
+  wxString GetConfigDir() const override { return m_profile; }
+  wxString GetUserConfigDir() const override { return m_profile; }
+#endif
 
 private:
   wxString m_profile;
@@ -734,6 +751,9 @@ private:
 #endif
 
 wxAppTraits* MyApp::CreateTraits() {
+#ifdef OCPN_WINDOWS64_PREVIEW
+  return new ChartAwareAppTraits(Windows64PreviewProfile());
+#endif
 #if defined(__linux__) && !defined(__ANDROID__)
   wxString profile, prefix;
   if (wxGetEnv("OPENCPN_CHART_AWARE_PROFILE", &profile) &&
@@ -1497,6 +1517,9 @@ void MyApp::BuildMainFrame() {
   // Strip the commit SHA number from the string to be shown in frame title.
   wxString short_version_name = wxString(PACKAGE_VERSION).BeforeFirst('+');
   wxString myframe_window_title = wxString("OpenCPN " + short_version_name);
+#ifdef OCPN_WINDOWS64_PREVIEW
+  myframe_window_title += " - 64-bit Preview";
+#endif
 
   if (g_bportable) {
     myframe_window_title += _(" -- [Portable(-p) executing from ");

@@ -73,6 +73,7 @@
 #include "config.h"
 
 #include "model/base_platform.h"
+#include "model/windows64_preview.h"
 #include "model/cmdline.h"
 #include "model/config_vars.h"
 #include "model/gui_vars.h"
@@ -319,6 +320,10 @@ wxString GetPluginDataDir(const char* plugin_name) {
 }
 
 wxString& AbstractPlatform::GetPrivateDataDir() {
+#ifdef OCPN_WINDOWS64_PREVIEW
+  m_PrivateDataDir = Windows64PreviewProfile();
+  return m_PrivateDataDir;
+#endif
   if (!m_PrivateDataDir.IsEmpty() && g_configdir.empty())
     return m_PrivateDataDir;
   if (!g_configdir.empty()) {
@@ -373,6 +378,10 @@ wxString& AbstractPlatform::DefaultPrivateDataDir() {
 }
 
 wxString AbstractPlatform::GetWinPluginBaseDir() {
+#ifdef OCPN_WINDOWS64_PREVIEW
+  // Ignore imported legacy PluginDir overrides in this separate product.
+  return Windows64PreviewProfile() + "\\plugins";
+#endif
   if (g_winPluginDir != "") {
     wxLogMessage("winPluginDir: Using value from ini file.");
     wxFileName fn(g_winPluginDir);

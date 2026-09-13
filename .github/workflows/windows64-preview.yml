@@ -25,6 +25,8 @@ jobs:
           path: cache-windows64
           key: windows64-sdk-v1-${{ hashFiles('distribution/windows64/dependencies.json', 'distribution/windows64/triplets/*') }}
           restore-keys: windows64-sdk-v1-
+      - name: Test binary architecture gate
+        run: python -m unittest discover -s distribution/windows64 -p "test_*.py" -v
       - name: Build pinned x64 SDK
         run: python distribution/windows64/build.py dependencies
       - uses: actions/cache/save@v4

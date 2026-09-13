@@ -1,0 +1,39 @@
+{
+  "status": "Source candidates, not a qualified Windows bundle",
+  "plugins": {
+    "weather_routing": {
+      "repository": "https://github.com/pob220/xweather_routing_pi.git",
+      "revision": "c48d262bdf29ddceab44214da0a4433a6e214b4c",
+      "version": "1.17.6.0"
+    },
+    "xgrib": {
+      "repository": "https://github.com/pob220/xgrib_pi.git",
+      "revision": "f5e1ea1019f37af4d8d8e951f43213e8d122f96d",
+      "version": "0.2.5.2",
+      "generator_revision": "bf650d8960423461f607f9d96edb257e1092a7b9"
+    },
+    "climatology": {
+      "repository": "https://github.com/pob220/climatology_pi.git",
+      "revision": "cd00282e6ea2784a6d78ccfe47fed713269ad87e",
+      "dataset": "ocpn-climatology-2026.2"
+    },
+    "polar": {
+      "repository": "https://github.com/rgleason/polar_pi.git",
+      "revision": "10e82348848c6fc91e9b46fa1c22f86cfd9cf174",
+      "version": "1.2.38.0",
+      "status": "Existing distribution/source candidate; verify this is the intended updated Polars build before release."
+    },
+    "celestial": {
+      "repository": "https://github.com/pob220/celestial_navigation_pi.git",
+      "revision": "a003cf7d36880ca38d15a172bcde48ef5c3fa421",
+      "version": "2.8.5.4"
+    },
+    "offlinetides": {
+      "repository": "https://github.com/pob220/offlinetides_pi.git",
+      "revision": "2483ab116a983085e5dfcef47334ca1277f4e916",
+      "version": "1.0.2.0-alpha3",
+      "data_url": "https://github.com/pob220/offlinetides_pi/releases/download/v1.0.2.0-alpha3/offlinetides-global-data-1.0.0-alpha1.tar.gz",
+      "data_sha256": "a19fa1745778a95b4740acf9052062b8f7d54333eb024f3bf2b27548cd9e50a2"
+    }
+  }
+}
