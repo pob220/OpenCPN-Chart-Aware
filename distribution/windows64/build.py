@@ -88,7 +88,9 @@ def build_core(phase='all'):
             '-DCMAKE_INSTALL_PREFIX=' + str(STAGE), '-DOCPN_VERBOSE=OFF')
         run('cmake', '--build', WORK, '--config', 'Release', '--parallel', '4')
     if phase in ('all', 'test'):
-        run('ctest', '--test-dir', WORK, '-C', 'Release', '--output-on-failure', '--timeout', '120')
+        # Upstream enables CTest in test/, not in the top-level project.
+        run('ctest', '--test-dir', WORK / 'test', '-C', 'Release',
+            '--output-on-failure', '--no-tests=error', '--timeout', '120')
     if phase in ('all', 'stage'):
         run('cmake', '--install', WORK, '--config', 'Release')
         for dll in (INSTALLED / 'bin').glob('*.dll'):

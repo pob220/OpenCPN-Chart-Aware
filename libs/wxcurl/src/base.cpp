@@ -850,7 +850,8 @@ void wxCurlBase::SetCurlHandleToDefaults(const wxString& relativeURL)
         SetOpt(CURLOPT_ACCEPT_ENCODING, "*/*");
         SetOpt(CURLOPT_TCP_KEEPALIVE, 1);
         SetOpt(CURLOPT_FOLLOWLOCATION, 1L);
-#ifdef __WXMSW__
+        // The x64 Preview uses Schannel's Windows certificate store.
+#if defined(__WXMSW__) && !defined(OCPN_WINDOWS64_PREVIEW)
         SetOpt(CURLOPT_CAINFO, "curl-ca-bundle.crt"); //Use our local certificate list on Windows
         //SetOpt(CURLOPT_SSL_VERIFYPEER, true);		// FIXME: Temporary until we get certificates working
 #endif
