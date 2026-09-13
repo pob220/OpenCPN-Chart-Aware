@@ -49,8 +49,12 @@ jobs:
         with:
           path: cache-windows64
           key: windows64-sdk-v1-${{ hashFiles('distribution/windows64/dependencies.json', 'distribution/windows64/triplets/*', 'distribution/windows64/ports/**') }}
-      - name: Build and test core
-        run: python distribution/windows64/build.py core
+      - name: Compile native core
+        run: python distribution/windows64/build.py core-build
+      - name: Test native core
+        run: python distribution/windows64/build.py core-test
+      - name: Stage native core
+        run: python distribution/windows64/build.py core-stage
       - name: Fetch pinned plugin sources
         run: python distribution/windows64/fetch_plugins.py
       - name: Build and test all six native plugins

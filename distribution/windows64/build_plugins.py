@@ -148,9 +148,24 @@ def build_plugin(name):
 def main():
     runtime_environment()
     BUILD.mkdir(exist_ok=True)
-    build_generator()
+    failures = []
+    try:
+        build_generator()
+    except (subprocess.CalledProcessError, RuntimeError, OSError) as error:
+        failures.append('xGRIB generator')
+        print(f'BUILD FAILED: xGRIB generator: {error}', flush=True)
     for name in DLL_NAMES:
-        build_plugin(name)
+        if name == 'xgrib' and 'xGRIB generator' in failures:
+            failures.append(name)
+            print('BUILD SKIPPED: xgrib requires its generator', flush=True)
+            continue
+        try:
+            build_plugin(name)
+        except (subprocess.CalledProcessError, RuntimeError, OSError) as error:
+            failures.append(name)
+            print(f'BUILD FAILED: {name}: {error}', flush=True)
+    if failures:
+        raise SystemExit('Native plugin qualification failed: ' + ', '.join(failures))
     # Retain source, dependency and overlay provenance alongside the binaries.
     evidence = STAGE / 'build-evidence'
     evidence.mkdir(exist_ok=True)

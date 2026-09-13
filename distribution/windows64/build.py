@@ -69,21 +69,24 @@ def dependencies():
         download('https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.8/' + name, path, sha)
         run('7z', 'x', '-y', '-o' + str(WX), path)
 
-def build_core():
+def build_core(phase='all'):
     runtime_environment()
-    run('cmake', '-S', ROOT, '-B', WORK, *cmake_sdk_args(),
-        '-DOCPN_WINDOWS64_PREVIEW=ON', '-DOCPN_TARGET_TUPLE=msvc-wx32-x64;10;x86_64',
-        '-DOCPN_USE_CRASHREPORT=OFF',
-        '-DOCPN_CI_BUILD=ON', '-DOCPN_BUILD_TEST=ON', '-DOCPN_BUNDLE_WXDLLS=ON',
-        '-DOCPN_BUNDLE_VCDLLS=OFF', '-DBUNDLE_LIBARCHIVEDLLS=OFF',
-        '-DOCPN_BUNDLE_DOCS=OFF', '-DOCPN_BUNDLE_GSHHS=ON',
-        '-DCMAKE_INSTALL_PREFIX=' + str(STAGE), '-DOCPN_VERBOSE=OFF')
-    run('cmake', '--build', WORK, '--config', 'Release', '--parallel', '4')
-    run('ctest', '--test-dir', WORK, '-C', 'Release', '--output-on-failure', '--timeout', '120')
-    run('cmake', '--install', WORK, '--config', 'Release')
-    for dll in (INSTALLED / 'bin').glob('*.dll'):
-        shutil.copy2(dll, STAGE)
-    run(sys.executable, ROOT / 'distribution/windows64/verify_pe.py', STAGE)
+    if phase in ('all', 'build'):
+        run('cmake', '-S', ROOT, '-B', WORK, *cmake_sdk_args(),
+            '-DOCPN_WINDOWS64_PREVIEW=ON', '-DOCPN_TARGET_TUPLE=msvc-wx32-x64;10;x86_64',
+            '-DOCPN_USE_CRASHREPORT=OFF',
+            '-DOCPN_CI_BUILD=ON', '-DOCPN_BUILD_TEST=ON', '-DOCPN_BUNDLE_WXDLLS=ON',
+            '-DOCPN_BUNDLE_VCDLLS=OFF', '-DBUNDLE_LIBARCHIVEDLLS=OFF',
+            '-DOCPN_BUNDLE_DOCS=OFF', '-DOCPN_BUNDLE_GSHHS=ON',
+            '-DCMAKE_INSTALL_PREFIX=' + str(STAGE), '-DOCPN_VERBOSE=OFF')
+        run('cmake', '--build', WORK, '--config', 'Release', '--parallel', '4')
+    if phase in ('all', 'test'):
+        run('ctest', '--test-dir', WORK, '-C', 'Release', '--output-on-failure', '--timeout', '120')
+    if phase in ('all', 'stage'):
+        run('cmake', '--install', WORK, '--config', 'Release')
+        for dll in (INSTALLED / 'bin').glob('*.dll'):
+            shutil.copy2(dll, STAGE)
+        run(sys.executable, ROOT / 'distribution/windows64/verify_pe.py', STAGE)
 
 if __name__ == '__main__':
     if sys.platform != 'win32':
@@ -93,3 +96,5 @@ if __name__ == '__main__':
         dependencies()
     if mode in ('core', 'all'):
         build_core()
+    elif mode in ('core-build', 'core-test', 'core-stage'):
+        build_core(mode.removeprefix('core-'))
