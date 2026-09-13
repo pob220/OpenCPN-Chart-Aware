@@ -161,8 +161,8 @@ def build_plugin(name):
         gtest_include = WORK / '_deps/googletest-src/googletest/include'
         if not all(path.exists() for path in (gtest, gtest_main, gtest_include)):
             raise RuntimeError('The native core GoogleTest build is missing')
-        args += ['-DGTEST_LIBRARY_RELEASE=' + str(gtest),
-                 '-DGTEST_MAIN_LIBRARY_RELEASE=' + str(gtest_main),
+        args += ['-DGTEST_LIBRARY=' + str(gtest),
+                 '-DGTEST_MAIN_LIBRARY=' + str(gtest_main),
                  '-DGTEST_INCLUDE_DIR=' + str(gtest_include)]
     run('cmake', '-S', source, '-B', work, *cmake_sdk_args(), *args)
     run('cmake', '--build', work, '--config', 'Release', '--parallel', '4')
