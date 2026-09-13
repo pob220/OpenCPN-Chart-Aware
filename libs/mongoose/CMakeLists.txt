@@ -8,7 +8,10 @@ set (SRC src/mongoose.c include/mongoose.h)
 add_library(MONGOOSE STATIC ${SRC})
 add_library(ocpn::mongoose ALIAS MONGOOSE)
 
-if (NOT WIN32)
+if (OCPN_WINDOWS64_PREVIEW)
+  find_package(OpenSSL REQUIRED)
+  target_link_libraries(MONGOOSE PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+elseif (NOT WIN32)
  if (QT_ANDROID)
     target_include_directories( MONGOOSE PRIVATE
         ${CMAKE_SOURCE_DIR}/buildandroid/libopenssl/${ARCH}/openssl/include)
@@ -43,7 +46,7 @@ if (NOT WIN32)
       endif (APPLE)
     endif (OPENSSL_FOUND)
   endif (QT_ANDROID)
-else (NOT WIN32)
+else ()
   target_include_directories(
     MONGOOSE
     PRIVATE ${CMAKE_SOURCE_DIR}/cache/buildwin/include/openssl
@@ -56,7 +59,7 @@ else (NOT WIN32)
       MONGOOSE
       PRIVATE ${CMAKE_SOURCE_DIR}/cache/buildwin/libcrypto.lib
   )
-endif (NOT WIN32)
+endif ()
 
 target_compile_definitions(MONGOOSE PRIVATE MG_ENABLE_OPENSSL)
 

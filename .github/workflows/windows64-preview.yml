@@ -1,0 +1,53 @@
+name: Windows x64 Preview
+on:
+  push:
+    branches: [preview/windows-x64]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - uses: actions/cache/restore@v4
+        id: sdk-cache
+        with:
+          path: cache-windows64
+          key: windows64-sdk-v1-${{ hashFiles('distribution/windows64/dependencies.json', 'distribution/windows64/triplets/*') }}
+          restore-keys: windows64-sdk-v1-
+      - name: Build pinned x64 SDK
+        run: python distribution/windows64/build.py dependencies
+      - uses: actions/cache/save@v4
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
+        with:
+          path: cache-windows64
+          key: windows64-sdk-v1-${{ hashFiles('distribution/windows64/dependencies.json', 'distribution/windows64/triplets/*') }}
+      - name: Build and test core
+        run: python distribution/windows64/build.py core
+      - name: Retain build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows64-build-evidence
+          path: |
+            build-windows64/CMakeCache.txt
+            build-windows64/CMakeFiles/CMakeConfigureLog.yaml
+            build-windows64/Testing/
+            cache-windows64/vcpkg/buildtrees/*/*.log
+          retention-days: 14
+      - name: Retain internal core candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows64-core-internal
+          path: stage-windows64/
+          retention-days: 14

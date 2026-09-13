@@ -206,7 +206,10 @@ if (USE_TLS)
   if (USE_OPEN_SSL)
     message(STATUS "TLS configured to use openssl")
 
-if (NOT WIN32)
+if (OCPN_WINDOWS64_PREVIEW)
+  find_package(OpenSSL REQUIRED)
+  target_link_libraries(ixwebsocket PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+elseif (NOT WIN32)
  if (QT_ANDROID)
     target_include_directories(ixwebsocket PRIVATE
         ${CMAKE_SOURCE_DIR}/buildandroid/libopenssl/${ARCH}/openssl/include)
@@ -241,7 +244,7 @@ if (NOT WIN32)
       endif (APPLE)
     endif (OPENSSL_FOUND)
   endif (QT_ANDROID)
-else (NOT WIN32)
+else ()
   target_include_directories(
     ixwebsocket
     PRIVATE ${CMAKE_SOURCE_DIR}/cache/buildwin/include/openssl
@@ -254,7 +257,7 @@ else (NOT WIN32)
       ixwebsocket
       PRIVATE ${CMAKE_SOURCE_DIR}/cache/buildwin/libcrypto.lib
   )
-endif (NOT WIN32)
+endif ()
 set(OPENSSL_FOUND TRUE)
   elseif (USE_MBED_TLS)
     message(STATUS "TLS configured to use mbedtls")

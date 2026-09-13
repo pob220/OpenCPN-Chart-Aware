@@ -380,6 +380,12 @@ bool PluginHandler::IsCompatible(const PluginMetadata& metadata, const char* os,
   static const std::vector<std::string> simple_abis = {
       "msvc", "msvc-wx32", "android-armhf", "android-arm64"};
 
+#ifdef OCPN_WINDOWS64_PREVIEW
+  if (metadata.target_arch != "x86_64" || metadata.target != "msvc-wx32-x64") {
+    DEBUG_LOG << "Windows x64 Preview requires an explicitly x64 plugin";
+    return false;
+  }
+#endif
   Plugin plugin(metadata);
   if (plugin.abi() == "all") {
     DEBUG_LOG << "Returning true for plugin abi \"all\"";

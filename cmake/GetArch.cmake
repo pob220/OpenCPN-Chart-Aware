@@ -5,6 +5,8 @@ function(GetArch)
   # Set up ARCH
   if (NOT OCPN_TARGET_TUPLE STREQUAL "")
     list(GET OCPN_TARGET_TUPLE 2 ARCH)
+  elseif (WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(ARCH "x86_64")
   elseif (WIN32)
     # Should really be i386 since we are on win32. However, it's x86_64 for now,
     # see #2027

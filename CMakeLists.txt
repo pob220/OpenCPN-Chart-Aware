@@ -71,6 +71,14 @@ else ()
 endif ()
 
 project(OpenCPN)
+option(OCPN_WINDOWS64_PREVIEW "Build the isolated Windows x64 Preview" OFF)
+if(OCPN_WINDOWS64_PREVIEW)
+  if(NOT MSVC OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+    message(FATAL_ERROR "Windows64 Preview requires an MSVC x64 toolchain")
+  endif()
+  add_compile_definitions(OCPN_WINDOWS64_PREVIEW=1)
+  add_link_options(/LARGEADDRESSAWARE)
+endif()
 
 if (NOT DEFINED OCPN_VERBOSE OR OCPN_VERBOSE)
   set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -636,7 +644,7 @@ if ((NOT OPENGLES_FOUND) AND (NOT QT_ANDROID))
 endif ()
 
 # configure GLEW
-if (OPENGL_FOUND AND CMAKE_HOST_WIN32)
+if (OPENGL_FOUND AND CMAKE_HOST_WIN32 AND NOT OCPN_WINDOWS64_PREVIEW)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/cache/buildwin/include/glew)
   link_libraries(${CMAKE_SOURCE_DIR}/cache/buildwin/glew32.lib)
 elseif (OPENGL_FOUND AND NOT APPLE)
@@ -1517,7 +1525,7 @@ target_link_libraries(${PACKAGE_NAME} PRIVATE ocpn::s57-charts)
 add_subdirectory(libs/gui)
 target_link_libraries(${PACKAGE_NAME} PRIVATE ocpn::guilib)
 
-if (MSVC)
+if (MSVC AND NOT OCPN_WINDOWS64_PREVIEW)
   install(FILES "cache/buildwin/libssl-3.dll" DESTINATION ".")
   install(FILES "cache/buildwin/libcrypto-3.dll" DESTINATION ".")
 endif ()
@@ -2434,7 +2442,7 @@ if (MSVC AND OCPN_USE_CRASHREPORT)
 endif ()
 
 # Install glew dll
-if (MSVC AND OCPN_USE_GL)
+if (MSVC AND OCPN_USE_GL AND NOT OCPN_WINDOWS64_PREVIEW)
   install(FILES ${CMAKE_SOURCE_DIR}/cache/buildwin/glew32.dll
           DESTINATION ${PREFIX_PKGDATA}
   )
