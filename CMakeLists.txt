@@ -655,7 +655,10 @@ elseif (OPENGL_FOUND AND NOT APPLE)
   if (OCPN_WINDOWS64_PREVIEW)
     # OpenCPN's static GLU has a patched API header. Keep it ahead of the
     # general OpenGL headers supplied with the vcpkg SDK.
-    include_directories(BEFORE "${CMAKE_SOURCE_DIR}/libs/gl_headers/windows")
+    include_directories(BEFORE "${CMAKE_SOURCE_DIR}/libs/gl_headers/windows"
+      "${CMAKE_SOURCE_DIR}/libs/sqlite/include")
+    # Windows builds the bundled SQLite. The SDK also supplies SQLite for
+    # other dependencies; its feature-configured header must not shadow ours.
     # The legacy Windows sources include glew.h without its GL/ prefix.
     foreach (_glew_include IN LISTS GLEW_INCLUDE_DIRS)
       include_directories("${_glew_include}/GL")
