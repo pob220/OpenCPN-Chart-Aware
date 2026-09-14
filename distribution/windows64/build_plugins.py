@@ -49,7 +49,7 @@ def native_source_fixes(name, source):
              'target_include_directories(celestial_tests PRIVATE\n'
              '    $<TARGET_PROPERTY:ocpn::api,INTERFACE_INCLUDE_DIRECTORIES>)'),
             ('test/CMakeLists.txt', '        ocpn::api\n', ''),
-            ('opencpn-libs/plugin_dc/dc_utils/CMakeLists.txt',
+            ('src/plugin_dc/dc_utils/CMakeLists.txt',
              'add_library(_DC_UTILS STATIC ${SRC})',
              'add_library(_DC_UTILS STATIC ${SRC})\n'
              '# Static drawing utilities do not export the host API classes.\n'
