@@ -112,6 +112,18 @@ static bool IsSystemPluginPath(const std::string& path) {
   return false;
 }
 
+/** Bundled Preview plugins may reside beside the built-in plugins. */
+static bool IsPreviewBundlePlugin(const wxString& filename) {
+#ifdef OCPN_WINDOWS64_PREVIEW
+  static const char* names[] = {
+      "xweather_routing_pi.dll", "xgrib_pi.dll", "celestial_navigation_pi.dll",
+      "polar_pi.dll", "climatology_pi.dll", "offlinetides_pi.dll"};
+  for (const char* name : names)
+    if (filename.IsSameAs(name, false)) return true;
+#endif
+  return false;
+}
+
 /** Return true if name is a valid system plugin name. */
 static bool IsSystemPluginName(const std::string& name) {
   static const std::vector<std::string> kPlugins = {
@@ -574,7 +586,8 @@ bool PluginLoader::LoadPluginCandidate(const wxString& file_name,
   if (!g_allow_arb_system_plugin) {
     if (!g_bportable) {
       if (base_plugin_path.IsSameAs(plugin_file_path)) {
-        if (!IsSystemPluginPath(file_name.ToStdString())) {
+        if (!IsSystemPluginPath(file_name.ToStdString()) &&
+            !IsPreviewBundlePlugin(plugin_file)) {
           DEBUG_LOG << "Skipping plugin " << file_name << " in "
                     << g_BasePlatform->GetPluginDir();
 
@@ -643,6 +656,7 @@ bool PluginLoader::LoadPluginCandidate(const wxString& file_name,
       if (dynamic_cast<wxApp*>(wxAppConsole::GetInstance())) {
         // The CLI has no graphics context, but plugins assumes there is.
         if (pic->m_enabled) {
+          wxLogMessage("PluginLoader: Initializing PlugIn: " + file_name);
           pic->m_cap_flag = pic->m_pplugin->Init();
           pic->m_init_state = true;
         }

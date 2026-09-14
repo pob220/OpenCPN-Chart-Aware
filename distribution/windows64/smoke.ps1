@@ -168,7 +168,14 @@ try {
     } | ConvertTo-Json | Set-Content (Join-Path $evidencePath 'result.json')
 } finally {
     $env:PATH = $savedPath
-    if ($null -ne $app -and -not $app.HasExited) { Stop-Process -Id $app.Id -Force }
+    if ($null -ne $app -and -not $app.HasExited) {
+        try {
+            @($app.Modules | ForEach-Object { $_.FileName }) | ConvertTo-Json |
+                Set-Content (Join-Path $evidencePath 'loaded-modules-at-exit.json')
+            Save-Screenshot
+        } catch { Write-Warning "Could not retain final GUI diagnostics: $_" }
+        Stop-Process -Id $app.Id -Force
+    }
     if (Test-Path $log) { Copy-Item $log $evidencePath }
     Copy-Item (Join-Path $profile 'opencpn.ini') (Join-Path $evidencePath 'preview-test-profile.ini')
 }
