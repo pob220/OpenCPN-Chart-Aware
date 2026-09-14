@@ -23,9 +23,9 @@ sha256sum --check opencpn-chart-aware-preview_5.14.0+chartaware.20260915.1_amd64
 sudo apt install ./opencpn-chart-aware-preview_5.14.0+chartaware.20260915.1_amd64.deb
 ```
 
-Close existing OpenCPN instances, then open **OpenCPN Chart-Aware Preview** from the application menu. Use your ordinary desktop account, not sudo. The download is approximately 274 MiB. The application payload is approximately 624 MiB, plus any Debian dependencies APT needs to install.
+Close existing OpenCPN instances, then open **OpenCPN Chart-Aware Preview** from the application menu. Use your ordinary desktop account, not sudo. The download is approximately 275 MiB. The application payload is approximately 624 MiB, plus any Debian dependencies APT needs to install.
 
-The first-run assistant offers fresh settings or a verified backup and independent copy of an existing profile. **Isolated mode is recommended.** Optional replacement supports Debian/APT installations, requires separate confirmation, and first saves the exact original packages for rollback. Original settings are not removed or shared. Imported connections are disabled until reviewed. Plugin binaries and rebuildable caches are not imported. Purchased charts are not backed up by this assistant. See [the installation and recovery guide](https://github.com/pob220/OpenCPN-Chart-Aware/blob/f9ed43e1b3bede8050388523ef9cc762f2cf099c/distribution/INSTALL.md).
+The first-run assistant offers fresh settings or a verified backup and independent copy of an existing profile. **Isolated mode is recommended.** Optional replacement supports Debian/APT installations, requires separate confirmation, and first saves the exact original packages for rollback. Original settings are not removed or shared. Imported connections are disabled until reviewed. Plugin binaries and rebuildable caches are not imported. Purchased charts are not backed up by this assistant. See [the installation and recovery guide](https://github.com/pob220/OpenCPN-Chart-Aware/blob/6873eb8e854c137b27ac3d61ba03a0f4dade0649/distribution/INSTALL.md).
 
 ## Included
 
@@ -40,13 +40,25 @@ The five supplied plugins are enabled; native GRIB is disabled initially. Additi
 
 ## Verification performed
 
-The exact run, test counts and installer checksum are added here after the pinned candidate passes its Debian 13 build, dependency-only install, plugin lifecycle and GUI qualification.
+The uploaded binary passed [GitHub Actions run 34907733167](https://github.com/pob220/OpenCPN-Chart-Aware/actions/runs/34907733167), building in Debian 13 and testing outside the compiler image:
 
-Component pins and vendor SHA-256 hashes are in the attached `components.json`. The qualified package assembly revision is recorded after the candidate passes. Weather Routing is pinned to `e5975b7bbd57eb4d2ca95b0dbea810e20605bdf1`; xGRIB to `f5e1ea1019f37af4d8d8e951f43213e8d122f96d`, and its generator to `bf650d8960423461f607f9d96edb257e1092a7b9`.
+- Core chart/depth tests: **14 passed**
+- Weather Routing tests: **295 passed**
+- xGRIB/generator tests: **27 passed**, plus functional merge/reader checks
+- Climatology tests: **3 passed**; packaged dataset manifest hashes verified
+- Profile setup tests: **8 passed**
+- Dependency-only Debian 13 APT installation and real GUI startup/clean shutdown
+- All five plugins loaded and deinitialized; Weather Routing initialised its chart-safety host and native GRIB remained disabled
+- Software default, explicit OpenGL under Mesa/Xvfb, and software recovery checked
+- Ordinary `~/.opencpn` remained absent during isolated GUI tests
+- Installed xGRIB helper merged synthetic weather/current GRIBs successfully
+- Coexistence with Debian OpenCPN, profile import, confirmed APT replacement, checksum-verified recovery, exact original package restoration and reinstall preserved both profiles
+
+Component pins and vendor SHA-256 hashes are in the attached `components.json` and [source manifest](https://github.com/pob220/OpenCPN-Chart-Aware/blob/6873eb8e854c137b27ac3d61ba03a0f4dade0649/distribution/components.json). The binary core and package assembly revision is `6873eb8e854c137b27ac3d61ba03a0f4dade0649`. Weather Routing is pinned to `e5975b7bbd57eb4d2ca95b0dbea810e20605bdf1`; xGRIB to `f5e1ea1019f37af4d8d8e951f43213e8d122f96d`, and its generator to `bf650d8960423461f607f9d96edb257e1092a7b9`.
 
 The downloaded installer was independently checked against its checksum and embedded version/source manifest. All five GSHHG archives were decompressed and checked against the compressed and uncompressed hashes in their embedded manifest. Test reports accompany the release. The original preview tag is retained for a stable download link.
 
-The installer SHA-256 is added after qualification.
+Installer SHA-256: `79c21177d67f154755c9b7499623dae6dd00bb6611ca6b868fbaab8ef272e2f7`.
 
 ## Routing evidence and limits
 
