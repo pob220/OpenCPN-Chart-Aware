@@ -136,11 +136,31 @@ def bundled_data_defaults(name, source):
             after = after.replace(needle, replacement)
     else:
         return
-    path.write_text(after, encoding='utf-8')
-    relative = path.relative_to(source).as_posix()
-    diff = ''.join(difflib.unified_diff(before.splitlines(True), after.splitlines(True),
-                                      fromfile='a/' + relative, tofile='b/' + relative))
-    (BUILD / f'{name}-data-defaults.patch').write_text(diff, encoding='utf-8')
+    changes = [(path, before, after)]
+    if name == 'celestial':
+        path = source / 'src/Sight.cpp'
+        before = path.read_text(encoding='utf-8')
+        needle = '''      const wxString path = celestial_navigation_pi::StandardPath() +
+                            _T("eclipse") + wxFileName::GetPathSeparator() +
+                            _T("de440s.bsp");'''
+        replacement = '''      wxString path = celestial_navigation_pi::StandardPath() +
+                      _T("eclipse") + wxFileName::GetPathSeparator() +
+                      _T("de440s.bsp");
+      if (!wxFileName::FileExists(path)) {
+        const wxString data = GetPluginDataDir("celestial_navigation_pi");
+        const wxString bundled = data + "/data/eclipse/de440s.bsp";
+        if (!data.empty() && wxFileName::FileExists(bundled)) path = bundled;
+      }'''
+        if before.count(needle) != 1:
+            raise RuntimeError('Celestial lunar kernel lookup changed')
+        changes.append((path, before, before.replace(needle, replacement)))
+    diffs = []
+    for path, before, after in changes:
+        path.write_text(after, encoding='utf-8')
+        relative = path.relative_to(source).as_posix()
+        diffs.extend(difflib.unified_diff(before.splitlines(True), after.splitlines(True),
+                                        fromfile='a/' + relative, tofile='b/' + relative))
+    (BUILD / f'{name}-data-defaults.patch').write_text(''.join(diffs), encoding='utf-8')
 
 def overlay_sources(name):
     # Work on disposable copies; never alter the pinned input repositories.

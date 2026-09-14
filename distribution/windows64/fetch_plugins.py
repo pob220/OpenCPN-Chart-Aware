@@ -11,15 +11,19 @@ def fetch(item):
     name, spec = item
     dest = INPUTS / name
     if not dest.exists():
-        run('git', 'clone', '--no-checkout', '--filter=blob:none', spec['repository'], dest)
+        # Dataset manifests hash repository bytes, including JSON/text files.
+        run('git', 'clone', '--config', 'core.autocrlf=false', '--no-checkout',
+            '--filter=blob:none', spec['repository'], dest)
     # Refuse to reset user edits. Build overlays are applied only after fetching.
     dirty = subprocess.check_output(['git', 'status', '--porcelain'], cwd=dest, text=True)
     unmaterialized = all(p.name == '.git' for p in dest.iterdir())
     if dirty.strip() and not unmaterialized:
         raise RuntimeError(f'Plugin checkout has edits: {dest}')
+    run('git', 'config', '--local', 'core.autocrlf', 'false', cwd=dest)
     run('git', 'fetch', 'origin', spec['revision'], cwd=dest)
     run('git', 'checkout', '--detach', spec['revision'], cwd=dest)
-    run('git', 'submodule', 'update', '--init', '--recursive', '--jobs', '4', cwd=dest)
+    run('git', '-c', 'core.autocrlf=false', 'submodule', 'update', '--init',
+        '--recursive', '--jobs', '4', cwd=dest)
     actual = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=dest, text=True).strip()
     if actual != spec['revision']:
         raise RuntimeError(f'Wrong revision for {name}: {actual}')

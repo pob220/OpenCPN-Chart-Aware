@@ -21,7 +21,9 @@ def verify(path, expected, size=None):
     with path.open('rb') as stream:
         actual = hashlib.file_digest(stream, 'sha256').hexdigest()
     if actual != expected or (size is not None and path.stat().st_size != size):
-        raise RuntimeError(f'Dataset verification failed: {path}')
+        raise RuntimeError(f'Dataset verification failed: {path}; '
+                           f'expected {expected} / {size} bytes, '
+                           f'got {actual} / {path.stat().st_size} bytes')
     return {'file': path.relative_to(STAGE).as_posix(), 'sha256': actual,
             'bytes': path.stat().st_size}
 

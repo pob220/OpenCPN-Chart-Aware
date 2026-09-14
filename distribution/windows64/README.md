@@ -76,11 +76,14 @@ and a core missing large-address-awareness. All 16 DLLs extracted from the pinne
 wxWidgets x64 runtime archive pass the PE32+/AMD64 checks. This is dependency
 verification, not an OpenCPN build or GUI result. The 52 Climatology files and
 full-resolution shoreline archive also pass their pinned checksum checks.
-Windows CI run 34789186948 compiled and staged the native core and passed all
-85 registered core tests, including the chart-depth and chart-safety service
-tests. The generator's 6 tests and xGRIB's 19 tests passed. Polar 1.2.38.0 and
-OfflineTides compiled and installed. The remaining plugin build corrections
-and the complete runtime gate are still being qualified on the approved branch.
+Windows CI has compiled and staged the native core and all six plugin DLLs.
+All 85 registered core tests pass, including the chart-depth and chart-safety
+service tests. Run 34795218866 also passed the generator's 6 tests,
+xWeatherRouting's 258 tests, xGRIB's 19 tests and Climatology's 3 test groups.
+Polar 1.2.38.0 and OfflineTides compile and install. Run 34797101769 also passed
+both Celestial test groups and verified all 140 staged AMD64 images. The dataset
+staging and complete runtime gates are still being qualified on the approved
+branch. Successfully compiling every DLL does not yet qualify the ZIP.
 
 Modern x64 Windows supplies up to 128 TB of user-mode virtual address space to a
 large-address-aware x64 process. A 32-bit process has 2 GB by default or up to
