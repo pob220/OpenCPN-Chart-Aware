@@ -45,9 +45,15 @@ def native_source_fixes(name, source):
              'add_executable(celestial_tests ${SRC})\n'
              '# This executable supplies the host API through mocks.\n'
              'target_compile_options(celestial_tests PRIVATE /UMAKING_PLUGIN)\n'
+             'target_compile_definitions(celestial_tests PRIVATE DECL_EXP=)\n'
              'target_include_directories(celestial_tests PRIVATE\n'
              '    $<TARGET_PROPERTY:ocpn::api,INTERFACE_INCLUDE_DIRECTORIES>)'),
             ('test/CMakeLists.txt', '        ocpn::api\n', ''),
+            ('opencpn-libs/plugin_dc/dc_utils/CMakeLists.txt',
+             'add_library(_DC_UTILS STATIC ${SRC})',
+             'add_library(_DC_UTILS STATIC ${SRC})\n'
+             '# Static drawing utilities do not export the host API classes.\n'
+             'target_compile_definitions(_DC_UTILS PRIVATE DECL_EXP=)'),
         ]
     elif name == 'weather_routing':
         zlib_dll = INSTALLED / 'bin/z.dll'
@@ -65,6 +71,20 @@ def native_source_fixes(name, source):
              '# Keep the native SDK zlib DLL beside the test executable\n'
              '       # so GoogleTest discovery cannot select an'),
         ]
+        for filename in ('StabilityCorridor_tests.cpp', 'RoutingScenarioJson_tests.cpp'):
+            replacements.append(('test/' + filename, '#include <wx/wx.h>',
+                                 '#include <wx/wx.h>\n#include <wx/filename.h>'))
+        for filename, paths in {
+            'StabilityCorridor_tests.cpp': ['weather-routing-stability-test.geojson'],
+            'RoutingScenarioJson_tests.cpp': [
+                'weather-routing-climatology-on.json',
+                'weather-routing-climatology-absent.json',
+                'weather-routing-utc-scenario.json',
+                'weather-routing-stability-result.json'],
+        }.items():
+            for path in paths:
+                replacements.append(('test/' + filename, '"/tmp/' + path + '"',
+                                     'wxFileName::CreateTempFileName("' + path + '-")'))
     else:
         return
     originals = {}
@@ -212,7 +232,12 @@ def build_plugin(name):
     if tests:
         # Retain the actual imported DLL names before trying to execute tests.
         for executable in work.rglob('Release/*tests.exe'):
-            run('dumpbin', '/dependents', executable)
+            imports = subprocess.check_output(['dumpbin', '/dependents', str(executable)],
+                                              text=True)
+            print(str(executable) + '\n' + imports, flush=True)
+            if name == 'celestial' and re.search(r'^\s+opencpn\.exe\s*$', imports,
+                                                re.MULTILINE | re.IGNORECASE):
+                raise RuntimeError('Celestial tests still import the host executable instead of their mocks')
         run('ctest', '--test-dir', work, '-C', 'Release', '--output-on-failure',
             '--no-tests=error', '--timeout', '180')
     run('cmake', '--install', work, '--config', 'Release', '--prefix', STAGE)
