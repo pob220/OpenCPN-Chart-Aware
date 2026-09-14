@@ -1,7 +1,10 @@
 # Windows x64 Preview build
 
-Status: Windows CI is qualifying the native core and complete bundle recipe.
-No complete Windows Preview artifact has passed its runtime gate yet.
+Status: the complete native Windows x64 bundle passed its automated runtime
+gate on 14 September 2026, at source revision
+`17bbfab37a8c911400ec56295c9475b2c590a626`.
+See [Windows qualification run 34800864270](https://github.com/pob220/OpenCPN-Chart-Aware/actions/runs/34800864270)
+for the Preview ZIP and build evidence. CI artifacts are retained for 14 days.
 
 Source branch: `preview/windows-x64`, based on the focused OpenCPN 5.14
 chart-aware distribution at `e356754`. The ordinary working installation is not
@@ -43,12 +46,12 @@ Windows' known-folder API. Its wxStandardPaths user/config paths and managed
 plugin location are redirected into that profile. Imported legacy plugin path
 overrides are ignored. `--configdir` and portable mode are rejected by this
 Preview build so ordinary OpenCPN state cannot be selected through those flags.
-The title shows `64-bit Preview`. Runtime qualification is pending. Sentinel
+The title shows `64-bit Preview`. The automated runtime gate passed. Sentinel
 checks cover the normal roaming, local, and shared OpenCPN profile folders;
 broader filesystem write tracing and simultaneous real-installation testing
 remain useful tester checks.
 
-`components-candidate.json` pins six source candidates, not qualified binaries.
+`components-candidate.json` pins the six plugin sources used in the tested bundle.
 Polar 1.2.38.0 is explicitly confirmed by the user. OfflineTides uses
 the later published alpha3 source, which already has Windows x86 build history.
 The modified o-charts provider/runtime needs separate Windows x64 investigation
@@ -78,12 +81,21 @@ verification, not an OpenCPN build or GUI result. The 52 Climatology files and
 full-resolution shoreline archive also pass their pinned checksum checks.
 Windows CI has compiled and staged the native core and all six plugin DLLs.
 All 85 registered core tests pass, including the chart-depth and chart-safety
-service tests. Run 34795218866 also passed the generator's 6 tests,
-xWeatherRouting's 258 tests, xGRIB's 19 tests and Climatology's 3 test groups.
-Polar 1.2.38.0 and OfflineTides compile and install. Run 34797101769 also passed
-both Celestial test groups and verified all 140 staged AMD64 images. The dataset
-staging and complete runtime gates are still being qualified on the approved
-branch. Successfully compiling every DLL does not yet qualify the ZIP.
+service tests, together with the generator's 6 tests, xWeatherRouting's 258
+tests, xGRIB's 19 tests and Climatology's 3 test groups. Celestial passes both
+CTest groups; its main suite passes 177 tests and skips its three opt-in UI
+tests. Polar 1.2.38.0 and OfflineTides compile and install.
+All 140 staged native images pass the AMD64 gate, and all 58 operational dataset
+files pass their checksum checks. Plugin source checkouts preserve repository
+line endings so text datasets retain their published hashes.
+
+The complete runtime test confirms all six loaded plugins, the chart-aware core
+connection, the authenticated OfflineTides dataset, native HTTPS verification,
+the packaged xGRIB generator and console ABI, rejection of ordinary-profile
+overrides, unchanged ordinary-profile sentinels, and clean GUI shutdown.
+Only the six named Preview plugins are additionally allowed in the application
+plugin folder; normal compatibility and enable/disable checks still apply.
+The screenshot and runtime logs are retained in the CI build-evidence artifact.
 
 Modern x64 Windows supplies up to 128 TB of user-mode virtual address space to a
 large-address-aware x64 process. A 32-bit process has 2 GB by default or up to
