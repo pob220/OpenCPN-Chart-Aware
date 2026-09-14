@@ -8,6 +8,8 @@ import tarfile
 from build import ROOT, CACHE, STAGE, INSTALLED, download
 from fetch_plugins import INPUTS
 
+ECLIPSE_URL = ('https://github.com/pob220/celestial_navigation_pi/releases/download/'
+               'eclipse-data-2026.1/')
 ECLIPSE = {
     'de440s.bsp': ('c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2', 32726016),
     'moon_pa_de440_200625.bpc': ('60cd55aa401ea2ea97360636f567554bfe4e37bb829f901b4460a455dfaf783f', 12863488),
@@ -24,6 +26,10 @@ def verify(path, expected, size=None):
             'bytes': path.stat().st_size}
 
 def stage_data():
+    from build_plugins import DLL_NAMES
+    for path in [STAGE / 'opencpn.exe', *(STAGE / 'plugins' / name for name in DLL_NAMES.values())]:
+        if not path.is_file():
+            raise RuntimeError(f'Cannot exercise an incomplete native runtime: {path}')
     records = []
     pins = json.loads((ROOT / 'distribution/windows64/components-candidate.json').read_text(encoding='utf-8'))
     climate = STAGE / 'plugins/climatology_pi/data'
@@ -60,8 +66,7 @@ def stage_data():
     eclipse.mkdir(parents=True, exist_ok=True)
     for name, (sha, size) in ECLIPSE.items():
         cached = CACHE / 'eclipse-data-2026.1' / name
-        download('https://github.com/pob220/celestial_navigation_pi/releases/download/'
-                 'eclipse-data-2026.1/' + name, cached, sha)
+        download(ECLIPSE_URL + name, cached, sha)
         shutil.copy2(cached, eclipse / name)
         records.append(verify(eclipse / name, sha, size))
 

@@ -58,11 +58,14 @@ jobs:
       - name: Fetch pinned plugin sources
         run: python distribution/windows64/fetch_plugins.py
       - name: Build and test all six native plugins
+        id: plugins
         run: python distribution/windows64/build_plugins.py
       - name: Stage and verify operational data
         id: datasets
+        if: always() && steps.plugins.outcome != 'skipped'
         run: python distribution/windows64/stage_data.py
       - name: Exercise the isolated complete runtime
+        if: always() && steps.datasets.conclusion == 'success'
         shell: pwsh
         run: ./distribution/windows64/smoke.ps1
       - name: Retain build evidence
@@ -83,10 +86,11 @@ jobs:
             plugin-build-windows64/*-native-fixes.patch
             plugin-build-windows64/**/Release/*.exe
             plugin-build-windows64/**/Release/*.dll
+            distribution/windows64/celestial-test-main.cpp
             windows64-runtime-evidence/
             cache-windows64/vcpkg/buildtrees/*/*.log
           retention-days: 14
-      - name: Retain runtime diagnostics after a package startup failure
+      - name: Retain unqualified runtime diagnostics
         if: failure() && steps.datasets.conclusion == 'success'
         uses: actions/upload-artifact@v4
         with:
@@ -94,6 +98,7 @@ jobs:
           path: stage-windows64/
           retention-days: 7
       - name: Create Preview ZIP
+        if: success()
         run: python distribution/windows64/package.py
       - name: Retain complete Preview candidate
         uses: actions/upload-artifact@v4

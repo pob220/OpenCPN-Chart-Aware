@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import sys
 
-from build import ROOT, WORK, STAGE, INSTALLED, run, cmake_sdk_args, runtime_environment
+from build import ROOT, WORK, STAGE, INSTALLED, CACHE, download, run, cmake_sdk_args, runtime_environment
 from fetch_plugins import INPUTS
 
 BUILD = ROOT / 'plugin-build-windows64'
@@ -42,13 +42,15 @@ def native_source_fixes(name, source):
              '#define trunc(d) (((d) > 0) ? floor(d) : ceil(d))',
              'using std::isnan;\nusing std::isinf;\nusing std::trunc;'),
             ('test/CMakeLists.txt', 'add_executable(celestial_tests ${SRC})',
-             'add_executable(celestial_tests ${SRC})\n'
+             'add_executable(celestial_tests ${SRC} "' +
+             (ROOT / 'distribution/windows64/celestial-test-main.cpp').as_posix() + '")\n'
              '# This executable supplies the host API through mocks.\n'
              'target_compile_options(celestial_tests PRIVATE /UMAKING_PLUGIN)\n'
              'target_compile_definitions(celestial_tests PRIVATE DECL_EXP=)\n'
              'target_include_directories(celestial_tests PRIVATE\n'
              '    $<TARGET_PROPERTY:ocpn::api,INTERFACE_INCLUDE_DIRECTORIES>)'),
             ('test/CMakeLists.txt', '        ocpn::api\n', ''),
+            ('test/CMakeLists.txt', '        GTest::Main\n', ''),
             ('src/plugin_dc/dc_utils/CMakeLists.txt',
              'add_library(_DC_UTILS STATIC ${SRC})',
              'add_library(_DC_UTILS STATIC ${SRC})\n'
@@ -217,6 +219,13 @@ def build_plugin(name):
     if name == 'offlinetides':
         args += ['-DXTIDAL_STANDALONE_API=ON', '-DXTIDAL_BUILD_AUTHORING_TOOLS=OFF']
     if name == 'celestial':
+        from stage_data import ECLIPSE, ECLIPSE_URL
+        # The native test suite verifies and uses the real pinned DE440 kernel.
+        kernel = CACHE / 'eclipse-data-2026.1/de440s.bsp'
+        download(ECLIPSE_URL + 'de440s.bsp', kernel, ECLIPSE['de440s.bsp'][0])
+        target = source / 'eclipse/data/de440s.bsp'
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(kernel, target)
         # Reuse the native static GoogleTest built for the core, with its
         # matching headers, instead of adding a second SDK test library.
         gtest = WORK / 'lib/Release/gtest.lib'
@@ -229,6 +238,13 @@ def build_plugin(name):
                  '-DGTEST_INCLUDE_DIR=' + str(gtest_include)]
     run('cmake', '-S', source, '-B', work, *cmake_sdk_args(), *args)
     run('cmake', '--build', work, '--config', 'Release', '--parallel', '4')
+    # Stage successful builds so later diagnostics can exercise the complete
+    # runtime even if a unit test fails. CI still requires every stage to pass
+    # before creating a tester ZIP.
+    run('cmake', '--install', work, '--config', 'Release', '--prefix', STAGE)
+    expected = STAGE / 'plugins' / DLL_NAMES[name]
+    if not expected.is_file():
+        raise RuntimeError(f'Plugin was not installed: {expected}')
     if tests:
         # Retain the actual imported DLL names before trying to execute tests.
         for executable in work.rglob('Release/*tests.exe'):
@@ -240,10 +256,6 @@ def build_plugin(name):
                 raise RuntimeError('Celestial tests still import the host executable instead of their mocks')
         run('ctest', '--test-dir', work, '-C', 'Release', '--output-on-failure',
             '--no-tests=error', '--timeout', '180')
-    run('cmake', '--install', work, '--config', 'Release', '--prefix', STAGE)
-    expected = STAGE / 'plugins' / DLL_NAMES[name]
-    if not expected.is_file():
-        raise RuntimeError(f'Plugin was not installed: {expected}')
 
 def main():
     runtime_environment()
@@ -277,6 +289,7 @@ def main():
         shutil.copy2(path, evidence)
     for path in BUILD.glob('*-native-fixes.patch'):
         shutil.copy2(path, evidence)
+    shutil.copy2(ROOT / 'distribution/windows64/celestial-test-main.cpp', evidence)
     run(sys.executable, ROOT / 'distribution/windows64/verify_pe.py', STAGE)
 
 if __name__ == '__main__':
