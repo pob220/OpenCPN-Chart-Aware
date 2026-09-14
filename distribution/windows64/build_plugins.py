@@ -41,9 +41,16 @@ def native_source_fixes(name, source):
              '#define isnan _isnan\n#define isinf(x) (!_finite(x) && !_isnan(x))\n\n'
              '#define trunc(d) (((d) > 0) ? floor(d) : ceil(d))',
              'using std::isnan;\nusing std::isinf;\nusing std::trunc;'),
+            ('test/CMakeLists.txt', 'add_executable(celestial_tests ${SRC})',
+             'add_executable(celestial_tests ${SRC})\n'
+             '# This executable supplies the host API through mocks.\n'
+             'target_compile_options(celestial_tests PRIVATE /UMAKING_PLUGIN)\n'
+             'target_include_directories(celestial_tests PRIVATE\n'
+             '    $<TARGET_PROPERTY:ocpn::api,INTERFACE_INCLUDE_DIRECTORIES>)'),
+            ('test/CMakeLists.txt', '        ocpn::api\n', ''),
         ]
     elif name == 'weather_routing':
-        zlib_dll = INSTALLED / 'bin/zlib1.dll'
+        zlib_dll = INSTALLED / 'bin/z.dll'
         if not zlib_dll.is_file():
             raise RuntimeError('The native SDK zlib runtime is missing')
         replacements = [
@@ -203,6 +210,9 @@ def build_plugin(name):
     run('cmake', '-S', source, '-B', work, *cmake_sdk_args(), *args)
     run('cmake', '--build', work, '--config', 'Release', '--parallel', '4')
     if tests:
+        # Retain the actual imported DLL names before trying to execute tests.
+        for executable in work.rglob('Release/*tests.exe'):
+            run('dumpbin', '/dependents', executable)
         run('ctest', '--test-dir', work, '-C', 'Release', '--output-on-failure',
             '--no-tests=error', '--timeout', '180')
     run('cmake', '--install', work, '--config', 'Release', '--prefix', STAGE)

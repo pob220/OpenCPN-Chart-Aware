@@ -60,6 +60,7 @@ jobs:
       - name: Build and test all six native plugins
         run: python distribution/windows64/build_plugins.py
       - name: Stage and verify operational data
+        id: datasets
         run: python distribution/windows64/stage_data.py
       - name: Exercise the isolated complete runtime
         shell: pwsh
@@ -80,9 +81,18 @@ jobs:
             plugin-build-windows64/*-overlays.json
             plugin-build-windows64/*-data-defaults.patch
             plugin-build-windows64/*-native-fixes.patch
+            plugin-build-windows64/**/Release/*.exe
+            plugin-build-windows64/**/Release/*.dll
             windows64-runtime-evidence/
             cache-windows64/vcpkg/buildtrees/*/*.log
           retention-days: 14
+      - name: Retain runtime diagnostics after a package startup failure
+        if: failure() && steps.datasets.conclusion == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows64-unqualified-runtime-diagnostics
+          path: stage-windows64/
+          retention-days: 7
       - name: Create Preview ZIP
         run: python distribution/windows64/package.py
       - name: Retain complete Preview candidate
