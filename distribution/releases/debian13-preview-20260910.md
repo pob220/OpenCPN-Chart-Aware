@@ -36,10 +36,10 @@ The five supplied plugins are enabled; native GRIB is disabled initially. Additi
 
 ## Verification performed
 
-The uploaded binary passed [GitHub Actions run 34828693694](https://github.com/pob220/OpenCPN-Chart-Aware/actions/runs/34828693694), building in Debian 13 and testing outside the compiler image:
+The uploaded binary passed [GitHub Actions run 34848832792](https://github.com/pob220/OpenCPN-Chart-Aware/actions/runs/34848832792), building in Debian 13 and testing outside the compiler image:
 
 - Core chart/depth tests: **14 passed**
-- Weather Routing tests: **287 passed**
+- Weather Routing tests: **288 passed**
 - xGRIB/generator tests: **27 passed**, plus functional merge/reader checks
 - Climatology tests: **3 passed**; packaged dataset manifest hashes verified
 - Profile setup tests: **8 passed**
@@ -50,11 +50,11 @@ The uploaded binary passed [GitHub Actions run 34828693694](https://github.com/p
 - Installed xGRIB helper merged synthetic weather/current GRIBs successfully
 - Coexistence with Debian OpenCPN, profile import, confirmed APT replacement, checksum-verified recovery, exact original package restoration and reinstall preserved both profiles
 
-Component pins and vendor SHA-256 hashes are in the attached `components.json`. Weather Routing is pinned to `9bf27ef4537c1a56680267b75851a08340d30efd`; xGRIB to `f5e1ea1019f37af4d8d8e951f43213e8d122f96d`, and its generator to `bf650d8960423461f607f9d96edb257e1092a7b9`. The refreshed binary's package assembly revision and qualification run will be recorded here after the pinned build passes.
+Component pins and vendor SHA-256 hashes are in the attached `components.json` and [source manifest](https://github.com/pob220/OpenCPN-Chart-Aware/blob/632583dd583b13b926f277d879fd2336d6f5dfa0/distribution/components.json). The binary core and package assembly revision is `632583dd583b13b926f277d879fd2336d6f5dfa0`. Weather Routing is pinned to `9bf27ef4537c1a56680267b75851a08340d30efd`; xGRIB to `f5e1ea1019f37af4d8d8e951f43213e8d122f96d`, and its generator to `bf650d8960423461f607f9d96edb257e1092a7b9`.
 
 The downloaded installer was independently checked against its checksum and embedded version/source manifest. All five GSHHG archives were decompressed and checked against the compressed and uncompressed hashes in their embedded manifest. Test reports accompany the release. The original preview tag is retained for a stable download link.
 
-Installer SHA-256: pending refreshed qualification.
+Installer SHA-256: `df0b9035cf82fe20e55573d35efa1e56f4def81163bd37561678a17a7d94c892`.
 
 ## Routing evidence and limits
 
