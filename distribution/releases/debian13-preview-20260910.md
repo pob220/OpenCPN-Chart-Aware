@@ -6,6 +6,8 @@ Weather Routing **1.17.7.0** includes two selectable native C++ engines. **Main 
 
 Advanced now offers all five GSHHG 2.3.7 shoreline levels from 0 — Crude through 4 — Full, bundled for offline use. Main starts at Full on a fresh install; Quick starts at Crude and each remembers its choice. With chart safety enabled and enforced in this preview, chart/depth evidence remains authoritative and the control becomes a separately saved, editable Scout shoreline resolution, initially Crude. Main also gains a bounded final-arrival allowance for routes that exhaust normal work close to the destination. The Advanced page has balanced columns and a separate Cyclone avoidance group while preserving all existing controls and values.
 
+Main can also retry a fully land-rejected long-step layer at the minimum routing step, subject to strict layer and generated-state ceilings. The ordinary path is unchanged when it advances, both sides of an obstruction remain eligible, and active geometry, boundary or cyclone limits disable this guidance. Max Diverted Course is now identified as a hard route-geometry limit independent of Max Search Angle, including an actionable failure diagnostic when a narrower diverted-course limit may exclude the sampled detour.
+
 xGRIB **0.2.5.2**, Environmental GRIB Generator **0.1.8** and all other component pins are retained. The existing release URL is retained. Installing the newer package with APT upgrades the preview without removing its separate profile.
 
 ## Install
@@ -13,8 +15,8 @@ xGRIB **0.2.5.2**, Environmental GRIB Generator **0.1.8** and all other componen
 Download the `.deb` and matching `.sha256` release assets into one directory:
 
 ```sh
-sha256sum --check opencpn-chart-aware-preview_5.14.0+chartaware.20260914.1_amd64.deb.sha256
-sudo apt install ./opencpn-chart-aware-preview_5.14.0+chartaware.20260914.1_amd64.deb
+sha256sum --check opencpn-chart-aware-preview_5.14.0+chartaware.20260914.2_amd64.deb.sha256
+sudo apt install ./opencpn-chart-aware-preview_5.14.0+chartaware.20260914.2_amd64.deb
 ```
 
 Close existing OpenCPN instances, then open **OpenCPN Chart-Aware Preview** from the application menu. Use your ordinary desktop account, not sudo. The download is approximately 274 MiB. The application payload is approximately 624 MiB, plus any Debian dependencies APT needs to install.
@@ -48,11 +50,11 @@ The uploaded binary passed [GitHub Actions run 34828693694](https://github.com/p
 - Installed xGRIB helper merged synthetic weather/current GRIBs successfully
 - Coexistence with Debian OpenCPN, profile import, confirmed APT replacement, checksum-verified recovery, exact original package restoration and reinstall preserved both profiles
 
-Component pins and vendor SHA-256 hashes are in the attached `components.json` and [source manifest](https://github.com/pob220/OpenCPN-Chart-Aware/blob/f9ed43e1b3bede8050388523ef9cc762f2cf099c/distribution/components.json). The binary core and package assembly revision is `f9ed43e1b3bede8050388523ef9cc762f2cf099c`. Weather Routing is pinned to `15c1369b6fbd71715dac598688c1b733a6e4fe7b`; xGRIB to `f5e1ea1019f37af4d8d8e951f43213e8d122f96d`, and its generator to `bf650d8960423461f607f9d96edb257e1092a7b9`.
+Component pins and vendor SHA-256 hashes are in the attached `components.json`. Weather Routing is pinned to `9bf27ef4537c1a56680267b75851a08340d30efd`; xGRIB to `f5e1ea1019f37af4d8d8e951f43213e8d122f96d`, and its generator to `bf650d8960423461f607f9d96edb257e1092a7b9`. The refreshed binary's package assembly revision and qualification run will be recorded here after the pinned build passes.
 
 The downloaded installer was independently checked against its checksum and embedded version/source manifest. All five GSHHG archives were decompressed and checked against the compressed and uncompressed hashes in their embedded manifest. Test reports accompany the release. The original preview tag is retained for a stable download link.
 
-Installer SHA-256: `db417789c152924b521209422460f9e0aab694452d17270818034a76da6dbfb4`.
+Installer SHA-256: pending refreshed qualification.
 
 ## Routing evidence and limits
 
