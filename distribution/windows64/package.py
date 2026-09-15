@@ -31,8 +31,9 @@ This Preview has a separate profile at:
   %LOCALAPPDATA%\\OpenCPN-64bit-Preview\\profile
 It does not import your ordinary OpenCPN profile. Add your chart folders in
 Options; the chart files can be shared with your existing installation.
-Enable the bundled plugins in Options > Plugins. xGRIB and the built-in GRIB
-plugin are alternatives, so normally enable xGRIB and leave built-in GRIB off.
+The six bundled Preview plugins are enabled on a clean first run and remain
+available in Options > Plugins if disabled later. xGRIB and the built-in GRIB
+plugin are alternatives, so normally leave the built-in GRIB plugin off.
 
 Included: xWeatherRouting, xGRIB with native generator, Celestial Navigation,
 Polar 1.2.38.0, Climatology with the 2026.2 dataset, and OfflineTides.

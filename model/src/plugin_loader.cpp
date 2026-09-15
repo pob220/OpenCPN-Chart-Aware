@@ -116,8 +116,9 @@ static bool IsSystemPluginPath(const std::string& path) {
 static bool IsPreviewBundlePlugin(const wxString& filename) {
 #ifdef OCPN_WINDOWS64_PREVIEW
   static const char* names[] = {
-      "xweather_routing_pi.dll", "xgrib_pi.dll", "celestial_navigation_pi.dll",
-      "polar_pi.dll", "climatology_pi.dll", "offlinetides_pi.dll"};
+      "xweather_routing_pi.dll",     "xgrib_pi.dll",
+      "celestial_navigation_pi.dll", "polar_pi.dll",
+      "climatology_pi.dll",          "offlinetides_pi.dll"};
   for (const char* name : names)
     if (filename.IsSameAs(name, false)) return true;
 #endif
@@ -646,7 +647,10 @@ bool PluginLoader::LoadPluginCandidate(const wxString& file_name,
       pic->m_common_name = pic->m_pplugin->GetCommonName();
       pic->m_plugin_filename = plugin_file;
       pic->m_plugin_modification = plugin_modification;
-      pic->m_enabled = enabled.Get(false);
+      // The Windows x64 Preview is distributed as a complete, qualified
+      // bundle.  Its six additional plugins must be usable on a clean first
+      // run without requiring catalog metadata or hand-edited configuration.
+      pic->m_enabled = enabled.Get(IsPreviewBundlePlugin(plugin_file));
 
       if (safe_mode::get_mode() &&
           !IsSystemPluginPath(file_name.ToStdString())) {
@@ -1038,7 +1042,10 @@ void PluginLoader::UpdateManagedPlugins(bool keep_orphans) {
     auto predicate = [](const PlugInContainer* pd) -> bool {
       const auto md(
           PluginLoader::MetadataByName(pd->m_common_name.ToStdString()));
+      // Bundled Preview plugins are deliberately not catalog installations.
+      // Keep their on-disk entries visible after a user disables one.
       return md.name.empty() && !md.is_imported && !pd->m_pplugin &&
+             !IsPreviewBundlePlugin(pd->m_plugin_filename) &&
              !IsSystemPluginName(pd->m_common_name.ToStdString());
     };
     auto end =

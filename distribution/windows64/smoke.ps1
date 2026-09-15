@@ -32,7 +32,8 @@ ShowMenuBar=1
 [PlugIns/grib_pi.dll]
 bEnabled=0
 "@
-foreach ($plugin in $plugins) { $config += "`n[PlugIns/$plugin]`nbEnabled=1`n" }
+# Deliberately omit the six bundled plugins.  This must exercise the same
+# clean-profile defaults a tester receives after extracting the ZIP.
 $config | Set-Content -Encoding utf8 (Join-Path $profile 'opencpn.ini')
 
 $normalPaths = @((Join-Path $roaming 'opencpn'), (Join-Path $local 'opencpn'),
@@ -130,6 +131,14 @@ try {
         if (-not $ready) { Start-Sleep -Milliseconds 500 }
     } while (-not $ready -and [DateTime]::UtcNow -lt $deadline)
     if (-not $ready) { throw 'The Preview did not initialize its main window and all six plugins.' }
+    $weatherData = Join-Path $stagePath 'plugins\xweather_routing_pi'
+    if (-not $content.Contains("PlugInManager: using data dir: $weatherData")) {
+        throw 'xWeatherRouting did not resolve its bundled data directory.'
+    }
+    if ($content.Contains('Loading WeatherRouting toolbar icon: data\weather_routing_pi.svg') -or
+        $content.Contains('Failed to load image from file "data\weather_routing_panel.png"')) {
+        throw 'xWeatherRouting fell back to an invalid relative icon path.'
+    }
     if (-not $content.Contains('Full chart-aware safety available')) {
         throw 'xWeatherRouting did not connect to the chart-aware core API.'
     }

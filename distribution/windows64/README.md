@@ -71,7 +71,9 @@ The ZIP includes the full-resolution GSHHG shoreline archive, all 52 Climatology
 2026.2 dataset files, the authenticated OfflineTides global runtime package,
 DE440s, lunar orientation and LOLA eclipse data. Source revisions, dataset
 checksums and licences accompany the package. No ordinary profile is imported.
-Plugins retain the usual enable/disable controls in Options.
+The six Preview plugins are enabled on a clean first run and retain the usual
+enable/disable controls in Options. Bundled plugins remain listed after being
+disabled even though they are not catalog installations.
 
 Local checks completed on 13 September 2026: eight architecture-gate tests pass,
 covering x86/ARM64 rejection, a nested wrong-architecture DLL, malformed images,
@@ -89,8 +91,10 @@ All 140 staged native images pass the AMD64 gate, and all 58 operational dataset
 files pass their checksum checks. Plugin source checkouts preserve repository
 line endings so text datasets retain their published hashes.
 
-The complete runtime test confirms all six loaded plugins, the chart-aware core
-connection, the authenticated OfflineTides dataset, native HTTPS verification,
+The complete runtime test starts with no plugin enablement entries and confirms
+all six bundled plugins are enabled by default. It also verifies xWeatherRouting
+resolves its installed icon/data directory, the chart-aware core connection,
+the authenticated OfflineTides dataset, native HTTPS verification,
 the packaged xGRIB generator and console ABI, rejection of ordinary-profile
 overrides, unchanged ordinary-profile sentinels, and clean GUI shutdown.
 Only the six named Preview plugins are additionally allowed in the application
