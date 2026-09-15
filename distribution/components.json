@@ -1,6 +1,6 @@
 {
   "upstream": {"repository": "https://github.com/OpenCPN/OpenCPN.git", "tag": "Release_5.14.0", "revision": "91f3b674366068a6ecd61a5e9aba204bba85f57e"},
-  "weather_routing": {"repository": "https://github.com/pob220/weather_routing_pi.git", "revision": "e5975b7bbd57eb4d2ca95b0dbea810e20605bdf1", "version": "1.17.9.0"},
+  "weather_routing": {"repository": "https://github.com/pob220/weather_routing_pi.git", "revision": "66a3f952dc6eb6823f9c8e7812e74615b6f8a4fb", "version": "1.17.10.0"},
   "xgrib": {"repository": "https://github.com/pob220/xgrib_pi.git", "revision": "f5e1ea1019f37af4d8d8e951f43213e8d122f96d", "version": "0.2.5.2", "generator_revision": "bf650d8960423461f607f9d96edb257e1092a7b9"},
   "climatology": {"repository": "https://github.com/pob220/climatology_pi.git", "revision": "cd00282e6ea2784a6d78ccfe47fed713269ad87e", "dataset": "ocpn-climatology-2026.2"},
   "ocharts": {"repository": "https://github.com/pob220/o-charts_pi.git", "revision": "b369c4cae0e84ea43847f64a26cb107ae1ffebe5", "official_runtime_url": "https://dl.cloudsmith.io/public/opencpn/o-charts-prod/raw/names/o-charts-v2.2.1-debian-x86_64-12-tarball/versions/v2.2.1/o-charts-v2.2.1_debian-x86_64-12-x86_64.tar.gz", "official_runtime_sha256": "432eccc267d9ca70d2fcd067db5e792d88fd5c437013d11da8d96ef131252dd0"},

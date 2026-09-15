@@ -2,11 +2,13 @@
 
 Refreshed **Debian 13 amd64 testing installer**, based on upstream OpenCPN 5.14.0. This is a focused distribution, not the broader Core-Hardening developer bundle. It is a prerelease for desktop testing and is not certified for navigational safety.
 
-Weather Routing **1.17.9.0** includes two selectable native C++ engines. **Main remains the default**, and upgrading preserves existing route and last-used settings. **Quick** is a separate bounded beam-search engine with independent tuning and a configurable 256 MiB default per-route search-storage ceiling. It shares Main's physical propagation and independent final validation, but its more aggressive pruning can miss a feasible or faster route that Main finds.
+Weather Routing **1.17.10.0** includes two selectable native C++ engines. **Main remains the default**, and upgrading preserves existing route and last-used settings. **Quick** is a separate bounded beam-search engine with independent tuning and a configurable 256 MiB default per-route search-storage ceiling. It shares Main's physical propagation and independent final validation, but its more aggressive pruning can miss a feasible or faster route that Main finds.
 
 Each engine now has a bounded **GRIB timeline cache** shared across a departure-time batch. It allocates frames only as required, admits the requested limit only when physical-memory safeguards pass, and releases the cache after the batch. Fresh defaults are 512 MiB for Main and 64 MiB for Quick; saved configurations are preserved.
 
 Chart-aware preparation now shows exact tile progress for each pass, keeps the window responsive and makes **Stop all computations** cancel at the next tile boundary. Routes requiring positive minimum charted depth validate their endpoint tiles first. In the Niue–Vava'u reproduction, this reduced an authoritative missing-depth-coverage rejection from about 44 minutes after 4,074 wider tiles to 2.069 seconds after the two endpoint tiles on the development machine. This is earlier prerequisite validation, not a claimed successful-route speedup.
+
+For land-only chart-aware routing, 1.17.10 starts with a distance-scaled scout corridor and expands with the live solver frontier. Clear open-water misses are scheduled in aligned 0.2-degree blocks, but every constituent fine mask still comes from the authoritative chart classifier and a coarse safe result requires all 16 masks to be present and clear. Mixed, missing, coastal, depth-enabled and final-validation cases retain the fine path. In controlled cold-cache Niue–Vava'u runs this reduced initial preparation from 4,074 to 1,196 tiles and improved median wall time from 60.977 to 54.573 seconds, while all seven runs produced identical routes, search counts and final safety results. Holyhead–Conwy also reproduced its exact coastal reference route.
 
 Advanced now offers all five GSHHG 2.3.7 shoreline levels from 0 — Crude through 4 — Full, bundled for offline use. Main starts at Full on a fresh install; Quick starts at Crude and each remembers its choice. With chart safety enabled and enforced in this preview, chart/depth evidence remains authoritative and the control becomes a separately saved, editable Scout shoreline resolution, initially Crude. Main also gains a bounded final-arrival allowance for routes that exhaust normal work close to the destination. The Advanced page has balanced columns and a separate Cyclone avoidance group while preserving all existing controls and values.
 
@@ -19,8 +21,8 @@ xGRIB **0.2.5.2**, Environmental GRIB Generator **0.1.8** and all other componen
 Download the `.deb` and matching `.sha256` release assets into one directory:
 
 ```sh
-sha256sum --check opencpn-chart-aware-preview_5.14.0+chartaware.20260915.1_amd64.deb.sha256
-sudo apt install ./opencpn-chart-aware-preview_5.14.0+chartaware.20260915.1_amd64.deb
+sha256sum --check opencpn-chart-aware-preview_5.14.0+chartaware.20260915.2_amd64.deb.sha256
+sudo apt install ./opencpn-chart-aware-preview_5.14.0+chartaware.20260915.2_amd64.deb
 ```
 
 Close existing OpenCPN instances, then open **OpenCPN Chart-Aware Preview** from the application menu. Use your ordinary desktop account, not sudo. The download is approximately 275 MiB. The application payload is approximately 624 MiB, plus any Debian dependencies APT needs to install.
@@ -30,7 +32,7 @@ The first-run assistant offers fresh settings or a verified backup and independe
 ## Included
 
 - OpenCPN 5.14.0 with chart/depth safety services, semantic-provider support and focused installation/profile-isolation changes
-- Weather Routing **1.17.9.0**, including Main and Quick engines, selectable shoreline detail, preserved configuration, a bounded GRIB timeline cache, responsive cancellable chart preparation, endpoint-first depth validation, chart-aware scouting and improved Main final-arrival handling
+- Weather Routing **1.17.10.0**, including Main and Quick engines, selectable shoreline detail, preserved configuration, a bounded GRIB timeline cache, responsive cancellable chart preparation, endpoint-first depth validation, adaptive chart-aware scouting and improved Main final-arrival handling
 - xGRIB **0.2.5.2**, Environmental GRIB Generator **0.1.8** and its runtime
 - Updated Climatology with dataset **ocpn-climatology-2026.2**
 - Polar **1.2.38.0**
@@ -40,31 +42,19 @@ The five supplied plugins are enabled; native GRIB is disabled initially. Additi
 
 ## Verification performed
 
-The uploaded binary passed [GitHub Actions run 34907733167](https://github.com/pob220/OpenCPN-Chart-Aware/actions/runs/34907733167), building in Debian 13 and testing outside the compiler image:
+The exact run, test counts and installer checksum are added here after the pinned candidate passes its Debian 13 build, dependency-only install, plugin lifecycle and GUI qualification.
 
-- Core chart/depth tests: **14 passed**
-- Weather Routing tests: **295 passed**
-- xGRIB/generator tests: **27 passed**, plus functional merge/reader checks
-- Climatology tests: **3 passed**; packaged dataset manifest hashes verified
-- Profile setup tests: **8 passed**
-- Dependency-only Debian 13 APT installation and real GUI startup/clean shutdown
-- All five plugins loaded and deinitialized; Weather Routing initialised its chart-safety host and native GRIB remained disabled
-- Software default, explicit OpenGL under Mesa/Xvfb, and software recovery checked
-- Ordinary `~/.opencpn` remained absent during isolated GUI tests
-- Installed xGRIB helper merged synthetic weather/current GRIBs successfully
-- Coexistence with Debian OpenCPN, profile import, confirmed APT replacement, checksum-verified recovery, exact original package restoration and reinstall preserved both profiles
-
-Component pins and vendor SHA-256 hashes are in the attached `components.json` and [source manifest](https://github.com/pob220/OpenCPN-Chart-Aware/blob/6873eb8e854c137b27ac3d61ba03a0f4dade0649/distribution/components.json). The binary core and package assembly revision is `6873eb8e854c137b27ac3d61ba03a0f4dade0649`. Weather Routing is pinned to `e5975b7bbd57eb4d2ca95b0dbea810e20605bdf1`; xGRIB to `f5e1ea1019f37af4d8d8e951f43213e8d122f96d`, and its generator to `bf650d8960423461f607f9d96edb257e1092a7b9`.
+Component pins and vendor SHA-256 hashes are in the attached `components.json`. The qualified package assembly revision is recorded after the candidate passes. Weather Routing is pinned to `66a3f952dc6eb6823f9c8e7812e74615b6f8a4fb`; xGRIB to `f5e1ea1019f37af4d8d8e951f43213e8d122f96d`, and its generator to `bf650d8960423461f607f9d96edb257e1092a7b9`.
 
 The downloaded installer was independently checked against its checksum and embedded version/source manifest. All five GSHHG archives were decompressed and checked against the compressed and uncompressed hashes in their embedded manifest. Test reports accompany the release. The original preview tag is retained for a stable download link.
 
-Installer SHA-256: `79c21177d67f154755c9b7499623dae6dd00bb6611ca6b868fbaab8ef272e2f7`.
+The installer SHA-256 is added after qualification.
 
 ## Routing evidence and limits
 
 In controlled development runs of the same Quick policy, a completed Provincetown–Lizard case using Main at 6h/20° took 324.780 seconds and peaked at 1,594.4 MiB process RSS; Quick completed in 69.476–77.886 seconds and peaked at 557.7–557.8 MiB. The 96 MiB and 256 MiB Quick settings produced the same independently validated route and used 0.368 MiB of tracked search storage. These are observations on one Linux machine under controlled inputs, not guaranteed speed or memory figures. Quick's budget applies only to tracked search storage and is not a cap on total OpenCPN memory.
 
-Main remains the broader solver. Quick can miss a feasible passage, useful departure window or faster route because it does not run Main's full recovery search. The 1.17.9 regression set covers configuration migration, independent engine settings, bounded memory/work exhaustion, GRIB cache admission and sharing, authoritative chart rejection, endpoint-first depth validation, chart-preparation progress and cancellation, coastal egress, all five offline shoreline levels and preservation of the earlier Atlantic controls. These Linux results do not establish Windows 32-bit runtime compatibility.
+Main remains the broader solver. Quick can miss a feasible passage, useful departure window or faster route because it does not run Main's full recovery search. The 1.17.10 regression set covers configuration migration, independent engine settings, bounded memory/work exhaustion, GRIB cache admission and sharing, authoritative chart rejection, endpoint-first depth validation, adaptive chart preparation and cancellation, coastal egress, all five offline shoreline levels and preservation of the earlier Atlantic controls. These Linux results do not establish Windows 32-bit runtime compatibility.
 
 ## Still requires real desktop testing
 
