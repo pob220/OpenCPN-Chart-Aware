@@ -1,10 +1,20 @@
 # Windows x64 Preview build
 
 Status: the complete native Windows x64 bundle passed its automated runtime
-gate on 14 September 2026, at source revision
-`17bbfab37a8c911400ec56295c9475b2c590a626`.
-See [Windows qualification run 34800864270](https://github.com/pob220/OpenCPN-Chart-Aware/actions/runs/34800864270)
+gate on 19 September 2026, at source revision
+`94cf6909107e09df9793444e07ade87ad9816036`.
+See [Windows qualification run 35443540536](https://github.com/pob220/OpenCPN-Chart-Aware/actions/runs/35443540536)
 for the Preview ZIP and build evidence. CI artifacts are retained for 14 days.
+
+This refresh includes xWeatherRouting **1.17.3.0**, the desktop **1.17.11**
+implementation, and Celestial Navigation **2.8.8.0**, the upstream version of
+the fixes previously called **2.8.5.11** locally. Android 1.17.12 is not used.
+The routing engine, headers and bundled source data are unchanged from the
+desktop 1.17.11 baseline; native SDK, test-runtime and installed-data lookup
+adjustments support this Windows build. Exact source pins accompany the ZIP.
+The workflow also retains standalone x64 xWeatherRouting and Celestial plugin
+archives, with distinct `msvc-wx32-x64` metadata and checksums, and a small native
+host SDK for the routing repository's recurring x64 CircleCI job.
 
 Source branch: `preview/windows-x64`, based on the focused OpenCPN 5.14
 chart-aware distribution at `e356754`. The ordinary working installation is not
@@ -63,7 +73,8 @@ the newly compiled x64 `opencpn.lib`, honors the Preview staging prefix, and
 records the overlays. Celestial and OfflineTides use the bundled read-only data
 when private data have not been selected. These overlays do not add a new tide
 API or tide-adjusted under-keel-clearance policy.
-The xWeatherRouting overlay selects the SDK's x64 zlib and matching test DLL.
+The xWeatherRouting build explicitly selects the native host import library
+and SDK zlib. Its overlay adjusts installed-data lookup and test temporary paths.
 Climatology's legacy `snprintf` compatibility macros are restricted to old MSVC.
 Celestial tests reuse the core's native GoogleTest libraries and headers.
 
@@ -83,9 +94,9 @@ verification, not an OpenCPN build or GUI result. The 52 Climatology files and
 full-resolution shoreline archive also pass their pinned checksum checks.
 Windows CI has compiled and staged the native core and all six plugin DLLs.
 All 85 registered core tests pass, including the chart-depth and chart-safety
-service tests, together with the generator's 6 tests, xWeatherRouting's 258
+service tests, together with the generator's 6 tests, xWeatherRouting's 302
 tests, xGRIB's 19 tests and Climatology's 3 test groups. Celestial passes both
-CTest groups; its main suite passes 177 tests and skips its three opt-in UI
+CTest groups; its main suite passes 183 tests and skips its four opt-in UI
 tests. Polar 1.2.38.0 and OfflineTides compile and install.
 All 140 staged native images pass the AMD64 gate, and all 58 operational dataset
 files pass their checksum checks. Plugin source checkouts preserve repository
