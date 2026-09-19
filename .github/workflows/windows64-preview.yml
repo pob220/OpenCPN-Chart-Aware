@@ -82,6 +82,8 @@ jobs:
           name: windows64-build-evidence
           path: |
             build-windows64/CMakeCache.txt
+            build-windows64/plugin-sdk/
+            build-windows64/Release/opencpn.lib
             build-windows64/CMakeFiles/CMakeConfigureLog.yaml
             build-windows64/Testing/
             build-windows64/test/Testing/

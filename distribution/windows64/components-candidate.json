@@ -3,7 +3,7 @@
   "plugins": {
     "weather_routing": {
       "repository": "https://github.com/pob220/xweather_routing_pi.git",
-      "revision": "1ca2e8381274a0dc4439d9f18ac8f51181a02219",
+      "revision": "ea5477cdee74f9746833b970ee0586b24726c202",
       "version": "1.17.3.0",
       "desktop_source_version": "1.17.11.0"
     },

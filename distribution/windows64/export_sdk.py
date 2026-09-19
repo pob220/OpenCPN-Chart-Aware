@@ -19,7 +19,7 @@ def export():
     sdk = WORK / 'plugin-sdk'
     files = {
         'lib/opencpn.lib': WORK / 'Release/opencpn.lib',
-        'lib/zlib.lib': INSTALLED / 'lib/zlib.lib',
+        'lib/z.lib': INSTALLED / 'lib/z.lib',
         'bin/z.dll': INSTALLED / 'bin/z.dll',
         'include/zlib.h': INSTALLED / 'include/zlib.h',
         'include/zconf.h': INSTALLED / 'include/zconf.h',
