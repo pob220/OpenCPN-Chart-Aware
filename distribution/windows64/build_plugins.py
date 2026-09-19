@@ -7,6 +7,9 @@ import re
 import shutil
 import subprocess
 import sys
+import tarfile
+import tempfile
+import xml.etree.ElementTree as ET
 
 from build import ROOT, WORK, STAGE, INSTALLED, CACHE, download, run, cmake_sdk_args, runtime_environment
 from fetch_plugins import INPUTS
@@ -35,6 +38,12 @@ def native_source_fixes(name, source):
         ]
     elif name == 'celestial':
         replacements = [
+            ('cmake/PluginSetup.cmake',
+             'set(PKG_TARGET_NVR ${PKG_TARGET}-${PKG_TARGET_VERSION})',
+             'set(PKG_TARGET "msvc-wx32-x64")\n'
+             'set(PKG_TARGET_VERSION "10")\n'
+             'unset(PKG_TARGET_WX_VER)\n'
+             'set(PKG_TARGET_NVR ${PKG_TARGET}-${PKG_TARGET_VERSION})'),
             ('test/lunar_ui_smoke_tests.cpp', '#include <wx/filename.h>',
              '#include <wx/filename.h>\n#include <wx/fileconf.h>'),
             ('src/Sight.h',
@@ -58,12 +67,7 @@ def native_source_fixes(name, source):
              'target_compile_definitions(_DC_UTILS PRIVATE DECL_EXP=)'),
         ]
     elif name == 'weather_routing':
-        zlib_dll = INSTALLED / 'bin/z.dll'
-        if not zlib_dll.is_file():
-            raise RuntimeError('The native SDK zlib runtime is missing')
         replacements = [
-            ('opencpn-libs/zlib/CMakeLists.txt', 'if (WIN32)',
-             'if (WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 4)'),
             ('src/icons.cpp', '#include "icons.h"',
              '#include "icons.h"\n#include "version.h"'),
             ('src/icons.cpp',
@@ -72,18 +76,11 @@ def native_source_fixes(name, source):
             ('src/icons.cpp',
              'fn.SetPath(GetPluginDataDir("weather_routing_pi"));',
              'fn.SetPath(GetPluginDataDir(PLUGIN_PACKAGE_NAME));'),
-            ('test/CMakeLists.txt',
-             '${WEATHER_ROUTING_SOURCE_DIR}/opencpn-libs/zlib/win/zlib1.dll',
-             zlib_dll.as_posix()),
-            ('test/CMakeLists.txt',
-             '# zlib1.lib is an import library. Keep its matching x86 DLL beside the\n'
-             '       # x86 test executable so GoogleTest discovery cannot select an',
-             '# Keep the native SDK zlib DLL beside the test executable\n'
-             '       # so GoogleTest discovery cannot select an'),
         ]
         for filename in ('StabilityCorridor_tests.cpp', 'RoutingScenarioJson_tests.cpp'):
-            replacements.append(('test/' + filename, '#include <wx/wx.h>',
-                                 '#include <wx/wx.h>\n#include <wx/filename.h>'))
+            if '#include <wx/filename.h>' not in (source / 'test' / filename).read_text():
+                replacements.append(('test/' + filename, '#include <wx/wx.h>',
+                                     '#include <wx/wx.h>\n#include <wx/filename.h>'))
         for filename, paths in {
             'StabilityCorridor_tests.cpp': ['weather-routing-stability-test.geojson'],
             'RoutingScenarioJson_tests.cpp': [
@@ -264,6 +261,11 @@ def build_plugin(name):
         args += ['-DGTEST_LIBRARY=' + str(gtest),
                  '-DGTEST_MAIN_LIBRARY=' + str(gtest_main),
                  '-DGTEST_INCLUDE_DIR=' + str(gtest_include)]
+    if name == 'weather_routing':
+        args += ['-DWEATHER_ROUTING_XWEATHER_IDENTITY=ON',
+                 '-DWEATHER_ROUTING_STANDALONE_API=ON',
+                 '-DWEATHER_ROUTING_WINDOWS_IMPORT_LIBRARY=' +
+                 str(WORK / 'Release/opencpn.lib')]
     run('cmake', '-S', source, '-B', work, *cmake_sdk_args(), *args)
     run('cmake', '--build', work, '--config', 'Release', '--parallel', '4')
     # Stage successful builds so later diagnostics can exercise the complete
@@ -284,6 +286,37 @@ def build_plugin(name):
                 raise RuntimeError('Celestial tests still import the host executable instead of their mocks')
         run('ctest', '--test-dir', work, '-C', 'Release', '--output-on-failure',
             '--no-tests=error', '--timeout', '180')
+    if name in ('weather_routing', 'celestial'):
+        package_plugin(name, work)
+
+
+def package_plugin(name, work):
+    """Retain separate native plugin packages as well as the complete bundle."""
+    from verify_pe import verify
+    run('cpack', '-G', 'TGZ', '-C', 'Release', '--config', 'CPackConfig.cmake', cwd=work)
+    prefix = DLL_NAMES[name].removesuffix('.dll')
+    archives = list(work.glob(prefix + '-*.tar.gz'))
+    metadata = list(work.glob(prefix + '-*.xml'))
+    if len(archives) != 1 or len(metadata) != 1:
+        raise RuntimeError(f'Expected one native archive/XML pair: {name}')
+    root = ET.parse(metadata[0]).getroot()
+    pins = json.loads((ROOT / 'distribution/windows64/components-candidate.json').read_text())
+    if ((root.findtext('target') or '').strip() != 'msvc-wx32-x64' or
+            (root.findtext('target-arch') or '').strip() != 'x86_64' or
+            (root.findtext('version') or '').strip() != pins['plugins'][name]['version']):
+        raise RuntimeError(f'Incorrect x64 package metadata: {metadata[0]}')
+    with tempfile.TemporaryDirectory() as directory, tarfile.open(archives[0]) as archive:
+        members = archive.getmembers()
+        if any('gtest' in m.name.lower() or 'gmock' in m.name.lower() for m in members):
+            raise RuntimeError('Plugin archive contains test development files')
+        archive.extractall(directory, filter='data')
+        verify(Path(directory))
+    destination = ROOT / 'artifacts-windows64-plugins' / name
+    destination.mkdir(parents=True, exist_ok=True)
+    for path in (archives[0], metadata[0]):
+        shutil.copy2(path, destination)
+        (destination / (path.name + '.sha256')).write_text(
+            hashlib.sha256(path.read_bytes()).hexdigest() + '  ' + path.name + '\n')
 
 def main():
     runtime_environment()

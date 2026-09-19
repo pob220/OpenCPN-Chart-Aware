@@ -55,6 +55,13 @@ jobs:
         run: python distribution/windows64/build.py core-test
       - name: Stage native core
         run: python distribution/windows64/build.py core-stage
+      - name: Export the matching native plugin SDK
+        run: python distribution/windows64/export_sdk.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Windows-x64-plugin-SDK
+          path: artifacts-windows64-sdk/*
+          retention-days: 14
       - name: Fetch pinned plugin sources
         run: python distribution/windows64/fetch_plugins.py
       - name: Build and test all six native plugins
@@ -105,4 +112,11 @@ jobs:
         with:
           name: OpenCPN-Windows-x64-Preview
           path: artifacts-windows64/*
+          retention-days: 14
+      - name: Retain standalone x64 plugin packages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-x64-plugin-packages
+          path: artifacts-windows64-plugins/
           retention-days: 14

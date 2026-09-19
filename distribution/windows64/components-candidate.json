@@ -3,8 +3,9 @@
   "plugins": {
     "weather_routing": {
       "repository": "https://github.com/pob220/xweather_routing_pi.git",
-      "revision": "c48d262bdf29ddceab44214da0a4433a6e214b4c",
-      "version": "1.17.6.0"
+      "revision": "1ca2e8381274a0dc4439d9f18ac8f51181a02219",
+      "version": "1.17.3.0",
+      "desktop_source_version": "1.17.11.0"
     },
     "xgrib": {
       "repository": "https://github.com/pob220/xgrib_pi.git",
@@ -24,9 +25,9 @@
       "status": "Polar 1.2.38.0 confirmed by the user for this Preview bundle."
     },
     "celestial": {
-      "repository": "https://github.com/pob220/celestial_navigation_pi.git",
-      "revision": "a003cf7d36880ca38d15a172bcde48ef5c3fa421",
-      "version": "2.8.5.4"
+      "repository": "https://github.com/rgleason/celestial_navigation_pi.git",
+      "revision": "c3136e2440fdb072b2b2d05392749d2c7752001d",
+      "version": "2.8.8.0"
     },
     "offlinetides": {
       "repository": "https://github.com/pob220/offlinetides_pi.git",

@@ -44,6 +44,10 @@ def stage_data():
     shoreline = STAGE / 'plugins/xweather_routing_pi/data/shoreline'
     manifest = json.loads((shoreline / 'manifest.json').read_text(encoding='utf-8'))
     full = next(item for item in manifest['datasets'] if item['quality'] == 'f')
+    # Standalone 1.17.11/1.17.3 packages contain C/L/I. The complete Preview
+    # continues to supply its pinned full-resolution shoreline for offline use.
+    shutil.copy2(INPUTS / 'weather_routing/data/shoreline' / full['file'],
+                 shoreline / full['file'])
     records.append(verify(shoreline / full['file'], full['archive_sha256'], full['archive_bytes']))
 
     tides = pins['plugins']['offlinetides']
